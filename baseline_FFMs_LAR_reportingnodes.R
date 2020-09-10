@@ -1,13 +1,16 @@
 #Baseline Functional Flow Metrics - Reporting Nodes
   #calculate functional flow metrics for all reporting nodes under baseline conditions
+  #Create boxplot figures showing the range for each FFM and reporting node
 
 
-
-#load library
+#load libraries
+#for functional flow calculator:
 #install.packages("devtools")
 library("devtools")
 #devtools::install_github('ceff-tech/ffc_api_client/ffcAPIClient')
 library("ffcAPIClient")
+
+#other packages
 library("ggplot2")
 library("scales")
 library("purrr")
@@ -23,9 +26,9 @@ wd <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Fl
 list.files <- list.files(wd, full.names = TRUE)
 hrly.files <- grep("Nodes/hourly", list.files)
 flow.files <- list.files[hrly.files]
-
 #set output directory
 output.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/"
+
 
 #COMID for each reporting node
 comid.node <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/reportingnodes_COMID.csv")
@@ -55,9 +58,17 @@ for(i in 1:length(flow.files)){
   node <- gsub("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/hourly_flow_", "", node)
     
   #format date
-  data$datetime <- as.POSIXct(data$datetime, format="%Y-%m-%d %H:%M:%S")
-  data$date <- format(data$datetime, format="%m/%d/%Y")
-  unique.dates <- unique(data$date)
+  #if 11101250, format date differently
+  if(node == "11101250"){
+    data$datetime <- as.POSIXct(data$datetime, format="%m/%d/%Y %H:%M")
+    data$date <- format(data$datetime, format="%m/%d/%Y")
+    unique.dates <- unique(data$date)
+    
+  }else{
+    data$datetime <- as.POSIXct(data$datetime, format="%Y-%m-%d %H:%M:%S")
+    data$date <- format(data$datetime, format="%m/%d/%Y")
+    unique.dates <- unique(data$date)
+  }
   ################
   
   #calc mean daily flow for predicted data
@@ -119,32 +130,38 @@ write.csv(percentiles.all2, file = "C:/Users/KristineT/SCCWRP/LA River Eflows St
 
 
 
-#####Format all percentiles all ###########
+#####Format all percentiles for all nodes ###########
 #### select columns and join #### 
+#note you need to have percentiles already calculated and formatted similar to percentiles.all3
 percentiles.all3 <- select(percentiles.all2, "ReportingNode", "p10","p25","p50","p75","p90","metric") 
 
-#join with reporting node names
+#join with reporting node names: to get the order of the nodes (upstream to downtream) and the reach order3
 percentiles.all.join <- full_join(percentiles.all3, reporting.node.names, by= "ReportingNode") %>% 
-  select("X.","ReportingNode", "Description","p10","p25","p50","p75","p90","metric", "Reach", "order")
+  select("X.","ReportingNode", "Description","p10","p25","p50","p75","p90","metric", "Reach", "order","order3")
 
 #sort based on metric and X.
 percentiles.all.sort <- percentiles.all.join[order(percentiles.all.join$metric, percentiles.all.join$X.),]
 
 #round values
 percentiles.all.sort.rnd <- percentiles.all.sort %>% mutate_if(is.numeric, ~round(., 2))
-
 write.csv(percentiles.all.sort.rnd, file= "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/FFM_percentiles_reportingnodes_all_formattedround.csv")
+
+
+
 
 ##### Visualizing flow metrics ###########
 
-#loop to go through each metric, make boxplots for each reporting node from downstream to upstream
+#loop to go through each metric, make metric boxplots for each reporting node from downstream to upstream
 
 #unique flow metrics 
 unique.metrics <- unique(percentiles.all.sort$metric)
 
 #for the plots, we want to show upstream to downstream, and rio hondo and compton creek where they input
 #sort based on metric and order
-percentiles.all.sort2 <- percentiles.all.join[order(percentiles.all.join$metric, percentiles.all.join$order),]
+#percentiles.all.sort2 <- percentiles.all.join[order(percentiles.all.join$metric, percentiles.all.join$order),]
+#for facet plot use order 2
+percentiles.all.sort2 <- percentiles.all.join[order(percentiles.all.join$metric, percentiles.all.join$order3),]
+
 
 for(k in 1:(length(unique.metrics)-1)){
   #### filter  based on metric k#### 
@@ -154,20 +171,21 @@ for(k in 1:(length(unique.metrics)-1)){
   #find metric name infor
   metric.info <- ffm.labels[ffm.labels$metric == unique.metrics[k],]
   #make reach a factor
-  sub$Reach <- factor(sub$Reach, levels=c("Mainstem", "RioHondo", "ComptonCreek"))
+  sub$Reach <- factor(sub$Reach, levels=c("Mainstem", "Rio Hondo", "Compton Creek"))
   #max metric value
   max <- max(sub$p50)
   min <- min(sub$p50)
   range <- max - ((max - min)/10)
   
-  #create plot of 
+  #create plot of median values --> don't use for report
   p <- ggplot(sub, aes(x = ReportingNode, y = p50, group = Reach)) + geom_point(aes(shape=Reach, color=Reach), size=2) +
     labs(title = metric.info$title_component, subtitle=metric.info$title_ffm) + ylab(metric.info$title_ffm) +
     theme(legend.position="bottom") +
     geom_vline(aes(xintercept = 5.5),linetype="dotted") + annotate(geom = "text", x = 5.2, y = range, label = "Glendale", angle = 90) +
     geom_vline(aes(xintercept = 3.5),linetype="dotted") + annotate(geom = "text", x = 3.2, y = range, label = "Burbank", angle = 90) +
     geom_vline(aes(xintercept = 2.5),linetype="dotted") + annotate(geom = "text", x = 2.2, y = range, label = "Tillman", angle = 90) 
-  print(p)
+  #print(p)
+  
   
   ####create boxplots####
   #remove duplicate compton creek values
@@ -175,21 +193,26 @@ for(k in 1:(length(unique.metrics)-1)){
   sub2 <- sub[-ind.cc,]
   
   b<- ggplot(sub2, aes(x=ReportingNode, ymin = p10, lower = p25, middle = p50, upper = p75, ymax = p90, fill=Reach, color=Reach)) +
-    geom_boxplot(stat="identity")  +  
+    geom_boxplot(stat="identity")  + 
     labs(title = metric.info$title_component, subtitle=metric.info$title_ffm) + ylab(metric.info$title_ffm) +
     theme(legend.position="bottom") +
     scale_color_manual(name = "Reach", labels = , values = c("#006d2c", "#b30000", "#54278f")) +
-    scale_fill_manual(name = "Reach", values = c("#66c2a5", "#fc8d62", "#8da0cb"))
-  
+    scale_fill_manual(name = "Reach", values = c("#66c2a5", "#fc8d62", "#8da0cb")) +
+    geom_vline(aes(xintercept = 5.5),linetype="dotted") +
+    geom_vline(aes(xintercept = 3.5),linetype="dotted") +
+    geom_vline(aes(xintercept = 2.5),linetype="dotted") 
+    
+  #add in the WRP annotation: will need to change the y location for each depending on your y axis
   if(unique.metrics[k] == "DS_Mag_50"){
-    b <- b + geom_vline(aes(xintercept = 5.5),linetype="dotted") + annotate(geom = "text", x = 5.2, y = 132, label = "Glendale", angle = 90) +
-      geom_vline(aes(xintercept = 3.5),linetype="dotted") + annotate(geom = "text", x = 3.2, y = 132, label = "Burbank", angle = 90) +
-      geom_vline(aes(xintercept = 2.5),linetype="dotted") + annotate(geom = "text", x = 2.2, y = 132, label = "Tillman", angle = 90) 
+    b <- b +  annotate(geom = "text", x = 5.2, y = 132, label = "Glendale", angle = 90) +
+       annotate(geom = "text", x = 3.2, y = 132, label = "Burbank", angle = 90) +
+       annotate(geom = "text", x = 2.2, y = 132, label = "Tillman", angle = 90) 
   }
   if(unique.metrics[k] == "Wet_BFL_Mag_50"){
-    b <- b + geom_vline(aes(xintercept = 5.5),linetype="dotted") + annotate(geom = "text", x = 5.2, y = 180, label = "Glendale", angle = 90) +
-      geom_vline(aes(xintercept = 3.5),linetype="dotted") + annotate(geom = "text", x = 3.2, y = 180, label = "Burbank", angle = 90) +
-      geom_vline(aes(xintercept = 2.5),linetype="dotted") + annotate(geom = "text", x = 2.2, y = 180, label = "Tillman", angle = 90) 
+    b <- b + 
+      annotate(geom = "text", x = 5.2, y = 180, label = "Glendale", angle = 90) +
+      annotate(geom = "text", x = 3.2, y = 180, label = "Burbank", angle = 90) +
+      annotate(geom = "text", x = 2.2, y = 180, label = "Tillman", angle = 90) 
   }
   print(b)
   

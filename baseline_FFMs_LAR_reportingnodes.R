@@ -159,7 +159,7 @@ unique.metrics <- unique(percentiles.all.sort$metric)
 #for the plots, we want to show upstream to downstream, and rio hondo and compton creek where they input
 #sort based on metric and order
 #percentiles.all.sort2 <- percentiles.all.join[order(percentiles.all.join$metric, percentiles.all.join$order),]
-#for facet plot use order 2
+#use order3 to have rio hondo and compton creek plotted at the end
 percentiles.all.sort2 <- percentiles.all.join[order(percentiles.all.join$metric, percentiles.all.join$order3),]
 
 
@@ -215,6 +215,9 @@ for(k in 1:(length(unique.metrics)-1)){
       annotate(geom = "text", x = 2.2, y = 180, label = "Tillman", angle = 90) 
   }
   print(b)
+  file.name <- paste0("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/", metric.info$metric, "_boxplot_reportingnodes.jpg")
+  ggsave(b, filename=file.name, dpi=300, height=5, width=9.5)
+  
   
 }
 

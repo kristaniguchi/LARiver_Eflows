@@ -137,7 +137,7 @@ percentiles.all3 <- select(percentiles.all2, "ReportingNode", "p10","p25","p50",
 
 #join with reporting node names: to get the order of the nodes (upstream to downtream) and the reach order3
 percentiles.all.join <- full_join(percentiles.all3, reporting.node.names, by= "ReportingNode") %>% 
-  select("X.","ReportingNode", "Description","p10","p25","p50","p75","p90","metric", "Reach", "order","order3")
+  select("X.","ReportingNode", "Description","p10","p25","p50","p75","p90","metric", "Reach", "order","order3","Reporting_Reach")
 
 #sort based on metric and X.
 percentiles.all.sort <- percentiles.all.join[order(percentiles.all.join$metric, percentiles.all.join$X.),]

@@ -12,7 +12,9 @@
 #Hydraulics raw output directory
 #scenarios hydraulics:
 raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/hydraulic-results-v4-201130/"
-#raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Scnearios_hydraulics_10132020/results-hydraulics/"
+#baseline hydraulics:
+#raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Baseline_hydraulic-results-v4-201130/"
+
 
 #list files
 files <- list.files(raw.dir, full.names = TRUE)
@@ -22,7 +24,7 @@ files.short <- list.files(raw.dir)
 #current conditions hydraulics
 #nodes <- gsub("hydraulic_ts_", "", files.short)
 # <- gsub(".csv", "", nodes)
-#scenario hydraulics node
+#scenario hydraulics node, also v4 baseline
 nodes <- gsub("_predictions.csv", "", files.short)
 
 #read in the channel geometry data used to calc max depth from WSE
@@ -31,14 +33,16 @@ geom <- read.csv(file="C:/Users/KristineT/SCCWRP/LA River Eflows Study - General
 names(geom) <- gsub("Main", "MC", names(geom))
 
 #post-processed directory
-#out.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/post_processed_hydraulics_201008/"
-#scenario output dir
-out.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/hydraulic-results-v4-201130/scenario_results-hydraulics_postprocessed/"
+#create new output directory within raw.dir
+out.dir <- paste0(raw.dir, "results-hydraulics_postprocessed/")
+#create output directory
+dir.create(out.dir)
 
 
 #loop to go through each file and post-process data
-for(i in 1:length(files)){
-
+#for(i in 1:length(files)){
+for(i in 1:15){
+    
   #read in csv raw hydraulics to be processed
   data <- read.csv(files[i])
   #replace typo in column name Dpth to Depth

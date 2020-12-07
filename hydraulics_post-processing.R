@@ -17,8 +17,8 @@ raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawDa
 
 
 #list files
-files <- list.files(raw.dir, full.names = TRUE)
-files.short <- list.files(raw.dir)
+files <- list.files(raw.dir, full.names = TRUE, pattern=".csv")
+files.short <- list.files(raw.dir, pattern=".csv")
 
 #node names from the file names, need to change based on file name structure
 #current conditions hydraulics
@@ -40,8 +40,8 @@ dir.create(out.dir)
 
 
 #loop to go through each file and post-process data
-#for(i in 1:length(files)){
-for(i in 1:15){
+for(i in 1:length(files)){
+#for(i in 1:15){
     
   #read in csv raw hydraulics to be processed
   data <- read.csv(files[i])

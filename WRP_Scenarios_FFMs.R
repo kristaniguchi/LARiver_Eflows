@@ -52,15 +52,17 @@ names(percentiles.all) <- c("p10","p25","p50","p75","p90","metric","comid","resu
 #i = 7 # test GLEN
 #i =  2 #F319 wardlow
 
-for(i in 1:length(flow.files)){
+#for(i in 1:length(flow.files)){
+for(i in 11:length(flow.files)){
+    
   #read in flow file
   data <- read.csv(flow.files[i])
   #reporting node
   node <- gsub("_all_Q.csv", "", flow.file.name[i])
 
-  #loop through each of the 500 scenarios and run FFC
+  #loop through each of the 500 scenarios (columns, first col is date) and run FFC
   for(j in 2:501){
-  #for(j in 335:501){
+  #for(j in 402:501){
     #create new data frame with date and mean daily flow to go into FFC
     data.daily <- data.frame(cbind(data$V1, as.numeric(data[,j])))
     names(data.daily) <- c("date", "flow")

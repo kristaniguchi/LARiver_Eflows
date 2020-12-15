@@ -8,6 +8,14 @@ library("devtools")
 #devtools::install_github('ceff-tech/ffc_api_client/ffcAPIClient')
 library("ffcAPIClient")
 
+#to uninstall package and reinstall (if updates to R package were made)
+#remove.packages("ffcAPIClient") #uninstall then restart R session
+#library("devtools")
+#devtools::install_github('ceff-tech/ffc_api_client/ffcAPIClient')
+#install.packages("ffcAPIClient")
+#library("ffcAPIClient")
+
+
 #other packages
 library("ggplot2")
 library("scales")
@@ -21,21 +29,29 @@ mytoken <- "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmaXJzdE5hbWUiOiJLcmlzIiwibGF
 set_token(mytoken)
 
 #directory with flow output from 500 scenarios
-wd <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results/"
+#laptop or desktop need to update:
+#wd <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results/"
+wd <- "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results/"
+
 #list files
 flow.files <- list.files(wd, full.names = TRUE)
 flow.file.name <- list.files(wd)
 
 #set output directory
-output.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results_FFMs/"
+#output.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results_FFMs/"
+output.dir <- "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results_FFMs/"
 
 
 #COMID for each reporting node
-comid.node <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/reportingnodes_COMID.csv")
+#comid.node <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/reportingnodes_COMID.csv")
+comid.node <- read.csv("C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/reportingnodes_COMID.csv")
 
 #Reporting node description file
-reporting.node.names <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/200827_draft-reporting-nodes-v4.csv")
+#reporting.node.names <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/200827_draft-reporting-nodes-v4.csv")
+reporting.node.names <- read.csv("C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/200827_draft-reporting-nodes-v4.csv")
+#rename SWMM.Node col
 reporting.node.names <- rename(reporting.node.names, ReportingNode = SWMM.Node )
+
 
 #Functional flow metric names and labels for plots
 filename <- ("L:/CA  E-flows framework_ES/Misc/Functional Flows metrics/functional_flow_metric_modeling/all_metric_def_list_FFMs_v2.csv")
@@ -52,8 +68,8 @@ names(percentiles.all) <- c("p10","p25","p50","p75","p90","metric","comid","resu
 #i = 7 # test GLEN
 #i =  2 #F319 wardlow
 
-#for(i in 1:length(flow.files)){
-for(i in 11:length(flow.files)){
+for(i in 1:length(flow.files)){
+#for(i in 11:length(flow.files)){
     
   #read in flow file
   data <- read.csv(flow.files[i])
@@ -107,6 +123,8 @@ for(i in 11:length(flow.files)){
       write.csv(ref.percentiles, file=paste0(dir.new,"/", node, ".ref.percentiles.statewide.csv"), row.names=FALSE)
     }
   }
+  #Write percentiles all for backup
+  write.csv(percentiles.all, file = paste0(output.dir, "/FFM_percentiles_allnodes_scenarios.csv"))
   
 }
 

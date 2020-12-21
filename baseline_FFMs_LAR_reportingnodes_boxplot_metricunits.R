@@ -1,5 +1,6 @@
 #Aquatic life use report
 #FFM boxplots: metric units
+#UPDATE: exclude LA 1 and 2 from plots for now
 
 
 #other packages
@@ -73,6 +74,9 @@ unique.metrics <- unique(percentiles.all.sort$metric)
 #use order3 to have rio hondo and compton creek plotted at the end
 percentiles.all.sort2 <- percentiles.all.join[order(percentiles.all.join$metric, percentiles.all.join$order3),]
 
+#UPDATE: exclude LA1 and LA2 from boxplots --> tidal influence
+exclude <- c("LA1", "LA2")
+percentiles.all.sort2 <- percentiles.all.sort2[-which(percentiles.all.sort2$ReportingNode %in% exclude),]
 
 for(k in 1:(length(unique.metrics)-1)){
   #### filter  based on metric k#### 

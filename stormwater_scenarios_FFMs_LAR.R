@@ -1,0 +1,166 @@
+#### Stormwater Capture Scenarios - Calc FFMs 
+
+#load libraries
+#for functional flow calculator:
+#install.packages("devtools")
+library("devtools")
+#devtools::install_github('ceff-tech/ffc_api_client/ffcAPIClient')
+library("ffcAPIClient")
+
+#other packages
+library("ggplot2")
+library("scales")
+library("purrr")
+library("plyr")
+library("tidyverse")
+
+#my token for FFC API Client
+mytoken <- "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmaXJzdE5hbWUiOiJLcmlzIiwibGFzdE5hbWUiOiJUYW5pZ3VjaGkgUXVhbiIsImVtYWlsIjoia3Jpc3RpbmV0cUBzY2N3cnAub3JnIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE1NzM4NjgwODN9.UJhTioLNNJOxvY_PYb_GIbcMRI_qewjkfYx-usC_7ZA"
+set_token(mytoken) 
+
+#directory where stormwater scenario outputs are saved
+data.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterScenarios/Results/"
+
+#scenarios to loop through (12, exclude baseline)
+path.all <- list.files(data.dir, full.names = TRUE)
+#find index of baseline scenarios, exclude
+ind.baseline <- grep("Baseline", path.all)
+path.scenarios <- path.all[-ind.baseline]
+scenario.names <- list.files(data.dir)[-ind.baseline]
+
+#lookup table that relates SWMM node with SUSTAIN junctions
+junctions <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterScenarios/Lookup_SWMM_ReportingNode_SUSTAIN_Junctions.csv") %>% 
+  rename(ReportingNode = Reporting.Node)
+#unique junctions to loop through
+unique.junctions <- unique(junctions$Junction.Number)
+
+#COMID for each reporting node
+comid.node <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/reportingnodes_COMID.csv")%>% 
+  rename(ReportingNode = Name)
+
+#Reporting node description file
+reporting.node.names <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/200827_draft-reporting-nodes-v4.csv")
+reporting.node.names <- rename(reporting.node.names, ReportingNode = SWMM.Node )
+
+#merge junctions lookup, COMID, reporting node name files
+lookup_junctions <- inner_join(junctions, comid.node, by = "ReportingNode") %>% 
+  inner_join(reporting.node.names, by = "ReportingNode")
+
+#Functional flow metric names and labels for plots
+filename <- ("L:/CA  E-flows framework_ES/Misc/Functional Flows metrics/functional_flow_metric_modeling/all_metric_def_list_FFMs_v2.csv")
+ffm.labels <- read.csv(filename)
+ffm.labels$metric <- ffm.labels$flow_metric
+
+
+
+#####Loop through each scenario and model node (junction) and calc FFMs
+
+#create empty percentiles df with all summary values
+percentiles.all <- data.frame(matrix(NA,1,11))
+names(percentiles.all) <- c("p10","p25","p50","p75","p90","metric","comid","result_type", "source2","ReportingNode", "Scenario")
+#i = 7 # test GLEN
+#i =  2 #F319 wardlow
+
+#empty vector of error nodes if errors will save here
+ffc.errors <- NA
+
+for(i in 1:length(scenario.names)){
+  #scenario i name
+  scenario.name <- scenario.names[i]
+  
+  #list junction numbers in directory
+  junc.files <- list.files(path.scenarios[i], pattern = "Init_Junction_")
+  #junction full paths
+  junc.full.path <- list.files(path.scenarios[i], pattern = "Init_Junction_", full.names = TRUE)
+  
+  #create new directory for scenario
+  dir.create(paste0(data.dir,scenario.names[i],"/daily/"))
+  dir.create(paste0(data.dir,scenario.names[i],"/daily/FFMs/"))
+
+  #loop through each junction associated with SWMM node
+  for(j in 1:length(unique.junctions)){
+    #get node data for junction j
+    sub <- lookup_junctions[lookup_junctions$Junction.Number == unique.junctions[j],] 
+    #node name
+    node <- as.character(sub$ReportingNode)[1]
+    COMID <- sub$COMID[1]
+    
+    #find junction j index for output file
+    ind.junc <- grep(paste0("_", unique.junctions[j],".out"), junc.files)
+    #read in junction out
+    data <- read.table(junc.full.path[ind.junc], skip = 32)
+    names(data) <- c("Junction.Number", "year", "month", "day", "hour", "min", "Volume", "Stage", "Inflow_t", "Outflow_w","Outflow_o","Outflow_ud","Outflow_ut","flow.cfs","Infiltration","Perc","AET","Seepage")
+    #format date
+    #add leading zero to hour
+    MONTH <- sprintf("%02d",data$month)
+    DAY <- sprintf("%02d",data$day)
+    date <- paste(MONTH, DAY, data$year, sep="/")
+    data$date <- as.POSIXct(date, format = "%m/%d/%Y")
+    unique.dates <- unique(date)
+    #format q to be numeric
+    data$flow.cfs <- as.numeric(as.character(data$flow.cfs))
+    ################
+    
+    #calc mean daily flow for dataent predicted data
+    mean.daily.data <- data %>% 
+      group_by(date) %>% 
+      summarize(flow = mean(flow.cfs, ra.rm = TRUE)) %>% 
+      ungroup()
+    
+    #create new data frame with date and mean daily flow to go into FFC
+    daily.data <- data.frame(cbind(unique.dates, mean.daily.data$flow))
+    names(daily.data) <- c("date", "flow")
+    daily.data$flow <- as.numeric(daily.data$flow )
+    #write daily output file
+    fname <- paste0(data.dir,scenario.names[i],"/daily/", node, "_junction_", unique.junctions[j], "_data_daily.csv")
+
+    write.csv(daily.data, fname, row.names = FALSE)
+    ################
+    
+    #calc FFMs and alteration for current data
+    #create new directory to save ffm outputs
+
+    #Try catch errors in evaluate alteration, skip iteration
+    tryCatch({
+      #Run daily data through FFC online
+      #run timeseries data from scenario j through FFC
+      #new FFC api set up
+      ffc <- FFCProcessor$new()  # make a new object we can use to run the commands
+      #allow ffc to run with min of 1 years
+      ffc$fail_years_data <- 1
+      #setup
+      ffc$set_up(timeseries=daily.data,
+                 token=mytoken,
+                 comid = COMID[1])
+      #then run
+      ffc$run()
+      
+      # then pull metrics out as dataframes
+      #predicted results, SWMM scenario j
+      scenario.percentiles.all <- ffc$ffc_percentiles
+      model <- paste0("SUSTAIN_Junction_", unique.junctions[j])
+      scenario.percentiles.all$source2 <- rep(model, length(scenario.percentiles.all$p10))
+      scenario.percentiles.all$ReportingNode <- rep(node, length(scenario.percentiles.all$p10))
+      scenario.percentiles.all$Scenario <- rep(scenario.name, length(scenario.percentiles.all$p10))
+
+      #save scenario percentiles into percentiles.all df
+      percentiles.all <- data.frame(rbind(percentiles.all, scenario.percentiles.all))
+      #save as backup
+      write.csv(percentiles.all, paste0(data.dir,scenario.names[i],"/daily/FFMs/percentiles.all.csv"))
+      
+    }, error = function(e) {
+      print(paste0(i, " FFC Error"))
+      ffc.errors <- c(ffc.errors, node)
+      #}, warning = function(w) {
+      #print(warnings()) #could delete this if not necessary
+    })
+  }
+}
+
+
+#remove first NA row
+percentiles.all2 <- percentiles.all[2:length(percentiles.all$p10),]
+#save reporting node column as class
+percentiles.all2$ReportingNode <- as.character(percentiles.all2$ReportingNode)
+#write percentiles.all
+write.csv(percentiles.all2, file = "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterScenarios/FFM_percentiles_SUSTAIN_Junctions_StormwaterScenarios.csv")

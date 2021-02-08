@@ -3,6 +3,7 @@
   #change all depths < 0.1 to 0
   #if velocity is < 0, then depth should be zero
   #if [velocity, shear, or power] < 0, set value to 0
+  #NEW: if depth <= 0, all other values in position should be 0
 #But first, find the max depth for each channel slice, then post process depths
   #use the max channel depth to find water surface elevation (max depth + thalweg)
   #use WSE to find slice depths
@@ -11,7 +12,7 @@
 
 #Hydraulics raw output directory
 #scenarios hydraulics:
-raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/hydraulic-results-v4-201130/"
+raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/WRP_scenarios/"
 #baseline hydraulics:
 #raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Baseline_hydraulic-results-v4-201130/"
 
@@ -38,6 +39,9 @@ out.dir <- paste0(raw.dir, "results-hydraulics_postprocessed/")
 #create output directory
 dir.create(out.dir)
 
+#run LA20_2 and F57C
+#i <- grep("LA20_2", files) #LA20_2
+#i <- grep("F57C", files)
 
 #loop to go through each file and post-process data
 for(i in 1:length(files)){
@@ -53,6 +57,29 @@ for(i in 1:length(files)){
   depth.cols <- grep("Depth", col.names)
   #depth col names
   depth.col.names <- col.names[depth.cols]
+  
+  #new chunk to account for reformatted output without hydraulic depth, old had hyd depth included in outputs
+  #if hydraulic depth column missing (only max depth outputted), need to add in dummy hydraulic depth columns for the channel locations with data
+  if(length(depth.col.names == 1)){
+    #find channel positions with output data velocity
+    num.positions <- length(grep("Vel", col.names))
+    #if 3 channel positions, create dummy for LOB, MC, ROB
+    if(num.positions == 3) {
+      #create dummy hyd depth columns to mimic original output format
+      data$Hydr..Depth..ft..LOB <- NA
+      data$Hydr..Depth..ft..MC <- NA
+      data$Hydr..Depth..ft..ROB <- NA
+      
+      #find column names; will do filters based on depth, velocity, and power
+      col.names <- names(data)
+      #find the col indices for depth
+      depth.cols <- grep("Depth", col.names)
+      #depth col names
+      depth.col.names <- col.names[depth.cols]
+      
+    }
+  }
+  
   
   #read in the geom data for node i
   geom.i <- geom[geom$Node == nodes[i],]
@@ -70,7 +97,7 @@ for(i in 1:length(files)){
   }
   #find min column names
   min.col.names <- geom.i.colnames[min.col.ind]
-  #find thalweg (min) elevation
+  #find thalweg (min) elevation for entire XS
   thalweg.elev <- min(geom.i[,min.col.ind])
   #find WSE from the max channel depth and thalweg elevation
   wse.data <- thalweg.elev + data$Max.Chl.Depth..ft.
@@ -103,14 +130,35 @@ for(i in 1:length(files)){
   #find the col indices for vel
   vel.cols <- col.names[grep("Vel", col.names)]
   depth.cols2 <- col.names[grep("Depth", col.names)]
-  #if vel < 0 change the depth to 0
+  #if vel < 0 change the depth to 0, if depth == 0 change all values to 0 in position
   #if more than one vel columns (LOB, MC, ROB), replace, else if only one (MC), only replace MC
   if(length(vel.cols)> 1){
+    #if vel <- change depth to 0
     data$Max..Depth..ft..LOB[data$Avg..Vel...ft.s..LOB < 0] <- 0
     data$Max..Depth..ft..MC[data$Avg..Vel...ft.s..MC < 0] <- 0
     data$Max..Depth..ft..ROB[data$Avg..Vel...ft.s..ROB < 0] <- 0
+    #if depth == 0, change all other columns to 0 in that position
+    #LOB
+    data$Avg..Vel...ft.s..LOB[data$Max..Depth..ft..LOB == 0] <- 0
+    data$Shear..lb.sq.ft..LOB[data$Max..Depth..ft..LOB == 0] <- 0
+    data$Stream.Power..lb.ft.s..LOB[data$Max..Depth..ft..LOB == 0] <- 0
+    #MC
+    data$Avg..Vel...ft.s..MC[data$Max..Depth..ft..MC == 0] <- 0
+    data$Shear..lb.sq.ft..MC[data$Max..Depth..ft..MC == 0] <- 0
+    data$Stream.Power..lb.ft.s..MC[data$Max..Depth..ft..MC == 0] <- 0
+    #ROB
+    data$Avg..Vel...ft.s..ROB[data$Max..Depth..ft..ROB == 0] <- 0
+    data$Shear..lb.sq.ft..ROB[data$Max..Depth..ft..ROB == 0] <- 0
+    data$Stream.Power..lb.ft.s..ROB[data$Max..Depth..ft..ROB == 0] <- 0
+    
   }else{
+    #if vel <0 change depth to 0
     data$Max..Depth..ft..MC[data$Avg..Vel...ft.s..MC < 0] <- 0
+    #MC if depth 0 change all values in MC to 0
+    data$Avg..Vel...ft.s..MC[data$Max..Depth..ft..MC == 0] <- 0
+    data$Shear..lb.sq.ft..MC[data$Max..Depth..ft..MC == 0] <- 0
+    data$Stream.Power..lb.ft.s..MC[data$Max..Depth..ft..MC == 0] <- 0
+    
   }
 
   #all other values, if negative, replace with 0 (velocity, shear, power)

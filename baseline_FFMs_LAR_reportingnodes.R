@@ -50,6 +50,9 @@ ffm.labels$metric <- ffm.labels$flow_metric
 percentiles.all <- data.frame(matrix(NA,1,10))
 names(percentiles.all) <- c("p10","p25","p50","p75","p90","metric","comid","result_type", "source2","ReportingNode")
 
+#test out GLEN
+i=8
+
 for(i in 1:length(flow.files)){
   #read in flow file
   data <- read.csv(flow.files[i])
@@ -82,6 +85,7 @@ for(i in 1:length(flow.files)){
   #create new data frame with date and mean daily flow to go into FFC
   data.daily <- data.frame(cbind(unique.dates, flow.pred))
   names(data.daily) <- c("date", "flow")
+  data.daily$flow <- as.numeric(data.daily$flow)
   #write daily output file
   fname <- paste0(wd,"daily/", node,"_flow_daily.csv")
   write.csv(data.daily, fname, row.names = FALSE)
@@ -94,7 +98,20 @@ for(i in 1:length(flow.files)){
   #find COMID for reporting node i
   COMID <- comid.node$COMID[comid.node$Name == node]
   
-  #Run data.futureframe through FFC online with my own gage data.future or model data.future
+  #Run data through FFC online with my own gage data.future or model data.future
+  #new FFC api set up
+  results <- FFCProcessor$new()  # make a new object we can use to run the commands
+  #allow ffc to run with min of 1 years
+  results$fail_years_data <- 1
+  #setup
+  results$set_up(timeseries=data.daily,
+                     token=mytoken,
+                     comid = COMID[1])
+  #set to "RGW" stream class for all --> every COMID is in this class in SOC
+  results$stream_class <- "RGW"
+  #then run
+  results$run()
+  
   results <- ffcAPIClient::evaluate_alteration(timeseries_df = data.daily, comid = COMID[1], token = mytoken)
   #reference percentiles
   ref.percentiles <- results$predicted_percentiles

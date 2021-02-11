@@ -280,7 +280,7 @@ i <- grep("GLEN", unique.nodes)
     
     #####GLENDALE
     ##if GLEN and dry season baseflow mag, add in species lines
-    if(unique.nodes[i] == "GLEN" & metric.info$flow_component == "Dry-season base flow"){
+    if(unique.nodes[i] == "GLEN" & metric.info$flow_component == "Dry-season baseflow"){
       #for GLEN 
       #add in shaded thresholds for typha
       p3 <- p2 +
@@ -339,7 +339,7 @@ i <- grep("GLEN", unique.nodes)
     }
     
     ##if GLEN and wet season baseflow mag, add in species lines
-    if(unique.nodes[i] == "GLEN" & metric.info$flow_component == "Wet-season base flow"){
+    if(unique.nodes[i] == "GLEN" & metric.info$flow_component == "Wet-season baseflow"){
       #for GLEN 
       #add in shaded thresholds for depth - existing species, high
       p3 <- p2 +
@@ -377,7 +377,7 @@ i <- grep("GLEN", unique.nodes)
     
     #####F319 Wardlow
     ##if F319 and dry season baseflow mag, add in species lines
-    if(unique.nodes[i] == "F319" & metric.info$flow_component == "Dry-season base flow"){
+    if(unique.nodes[i] == "F319" & metric.info$flow_component == "Dry-season baseflow"){
       #for F319 
       #add in shaded thresholds for depth - existing species, high
       p3 <- p2 +
@@ -393,7 +393,7 @@ i <- grep("GLEN", unique.nodes)
     }
     
     ##if F319 and wet season baseflow mag, add in species lines
-    if(unique.nodes[i] == "F319" & metric.info$flow_component == "Wet-season base flow"){
+    if(unique.nodes[i] == "F319" & metric.info$flow_component == "Wet-season baseflow"){
       #for F319 
       #No thresholds for existing species in wet season baseflow, only future
 

@@ -12,7 +12,8 @@
 
 #Hydraulics raw output directory
 #scenarios hydraulics:
-raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/WRP_scenarios/"
+#raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/WRP_scenarios/" #WRP scenarios
+raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Stormwater_Scenarios/" #stormwater scenarios
 #baseline hydraulics:
 #raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Baseline_hydraulic-results-v4-201130/"
 

@@ -1,4 +1,4 @@
-#Synthesis boxplot for developing flow recommendations - GLEN example
+#Synthesis boxplots for developing flow recommendations - GLEN example
 
 #load library
 library("ggplot2")

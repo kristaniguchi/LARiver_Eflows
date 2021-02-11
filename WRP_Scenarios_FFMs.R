@@ -30,26 +30,24 @@ set_token(mytoken)
 
 #directory with flow output from 500 scenarios
 #laptop or desktop need to update:
-#wd <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results/"
-wd <- "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results/"
+wd <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results/"
+#wd <- "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results/"
 
 #list files
 flow.files <- list.files(wd, full.names = TRUE)
 flow.file.name <- list.files(wd)
 
-#set output directory
-#output.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results_FFMs/"
-output.dir <- "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results_FFMs/"
+#set output directory - change depending on laptop or desktop
+output.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results_FFMs/"
+#output.dir <- "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results_FFMs/"
 
 
 #COMID for each reporting node
-#comid.node <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/reportingnodes_COMID.csv")
-comid.node <- read.csv("C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/reportingnodes_COMID.csv")
+comid.node <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/reportingnodes_COMID.csv")%>% 
+  rename(ReportingNode = Name)
 
 #Reporting node description file
-#reporting.node.names <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/200827_draft-reporting-nodes-v4.csv")
-reporting.node.names <- read.csv("C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/200827_draft-reporting-nodes-v4.csv")
-#rename SWMM.Node col
+reporting.node.names <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/200827_draft-reporting-nodes-v4.csv")
 reporting.node.names <- rename(reporting.node.names, ReportingNode = SWMM.Node )
 
 
@@ -86,7 +84,7 @@ for(i in 1:length(flow.files)){
     ####FFM 
     #calc FFMs and alteration for future data
     #find COMID for reporting node i
-    COMID <- comid.node$COMID[comid.node$Name == node]
+    COMID <- comid.node$COMID[comid.node$ReportingNode == node]
     
     #run timeseries data from scenario j through FFC
     #new FFC api set up
@@ -134,7 +132,7 @@ percentiles.all2 <- percentiles.all[2:length(percentiles.all$p10),]
 percentiles.all2$ReportingNode <- as.character(percentiles.all2$ReportingNode)
 #write percentiles.all
 #write.csv(percentiles.all2, file = "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/FFM_percentiles_reportingnodes_all.csv")
-write.csv(percentiles.all2, file = paste0(output.dir, "/FFM_percentiles_allnodes_scenarios.csv"))
+write.csv(percentiles.all2, file = paste0(output.dir, "/FFM_percentiles_allnodes_scenarios_02102021.csv"))
 
 
 

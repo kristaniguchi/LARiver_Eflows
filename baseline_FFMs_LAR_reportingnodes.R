@@ -86,6 +86,7 @@ for(i in 1:length(flow.files)){
   data.daily <- data.frame(cbind(unique.dates, flow.pred))
   names(data.daily) <- c("date", "flow")
   data.daily$flow <- as.numeric(data.daily$flow)
+  data.daily <- na.omit(data.daily)
   #write daily output file
   fname <- paste0(wd,"daily/", node,"_flow_daily.csv")
   write.csv(data.daily, fname, row.names = FALSE)

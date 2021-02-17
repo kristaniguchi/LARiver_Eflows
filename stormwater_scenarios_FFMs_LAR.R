@@ -19,17 +19,33 @@ mytoken <- "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmaXJzdE5hbWUiOiJLcmlzIiwibGF
 set_token(mytoken) 
 
 #directory where stormwater scenario outputs are saved
-data.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterScenarios/Results/"
+#data.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterScenarios/Results/"
+data.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/Results_WRP_UBF/"
+
 
 #scenarios to loop through (12, exclude baseline)
 path.all <- list.files(data.dir, full.names = TRUE)
-#find index of baseline scenarios, exclude
+scenario.names <- list.files(data.dir)
+
+#IF EXCLUDING BASELINE RUNS, find index of baseline scenarios, exclude
 ind.baseline <- grep("Baseline", path.all)
 path.scenarios <- path.all[-ind.baseline]
 scenario.names <- list.files(data.dir)[-ind.baseline]
+#to run baseline only runs
+#ind.baseline <- grep("Baseline", path.all)
+#path.scenarios <- path.all[ind.baseline]
+#scenario.names <- list.files(data.dir)[ind.baseline]
+
+#temp: only run AggressiveInfiltration_WRP100_UBF100 and AggressiveInfiltration_WRP100_UBF0 
+ind.run1 <- grep("AggressiveInfiltration_WRP100_UBF100", path.all)
+ind.run2 <- grep("AggressiveInfiltration_WRP100_UBF0", path.all)
+path.scenarios <- path.all[c(ind.run2,ind.run1)]
+scenario.names <- scenario.names[c(ind.run2,ind.run1)]
+
+
 
 #lookup table that relates SWMM node with SUSTAIN junctions
-junctions <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterScenarios/Lookup_SWMM_ReportingNode_SUSTAIN_Junctions.csv") %>% 
+junctions <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/Lookup_SWMM_ReportingNode_SUSTAIN_Junctions.csv") %>% 
   rename(ReportingNode = Reporting.Node)
 #unique junctions to loop through
 unique.junctions <- unique(junctions$Junction.Number)
@@ -68,10 +84,21 @@ for(i in 1:length(scenario.names)){
   #scenario i name
   scenario.name <- scenario.names[i]
   
-  #list junction numbers in directory
-  junc.files <- list.files(path.scenarios[i], pattern = "Init_Junction_")
-  #junction full paths
-  junc.full.path <- list.files(path.scenarios[i], pattern = "Init_Junction_", full.names = TRUE)
+  #if Baseline scenario, file will be PostDev_Junction_
+  ind.baseline <- grep("Baseline", scenario.name)
+  if(length(ind.baseline) > 0){
+    #list junction numbers in directory
+    junc.files <- list.files(path.scenarios[i], pattern = "PostDev_Junction_")
+    #junction full paths
+    junc.full.path <- list.files(path.scenarios[i], pattern = "PostDev_Junction_", full.names = TRUE)
+  }else{
+    #else if not baseline use Init_Junction_ naming convention
+    #list junction numbers in directory
+    junc.files <- list.files(path.scenarios[i], pattern = "Init_Junction_")
+    #junction full paths
+    junc.full.path <- list.files(path.scenarios[i], pattern = "Init_Junction_", full.names = TRUE)
+  }
+  
   
   #create new directory for scenario
   dir.create(paste0(data.dir,scenario.names[i],"/daily/"))
@@ -162,5 +189,17 @@ for(i in 1:length(scenario.names)){
 percentiles.all2 <- percentiles.all[2:length(percentiles.all$p10),]
 #save reporting node column as class
 percentiles.all2$ReportingNode <- as.character(percentiles.all2$ReportingNode)
+
 #write percentiles.all
-write.csv(percentiles.all2, file = "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterScenarios/FFM_percentiles_SUSTAIN_Junctions_StormwaterScenarios.csv")
+write.csv(percentiles.all2, file = "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_percentiles_SUSTAIN_Junctions_StormwaterScenariosUrbn.csv")
+
+#Write baseline only runs!
+#write.csv(percentiles.all2, file = "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_percentiles_SUSTAIN_BaselineScenarios_urbn_only.csv")
+
+#Temp: read in the percentiles file all bmps and append the 2 scenarios onto that one, save as new csv
+#write.csv(percentiles.all2, file = "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_percentiles_SUSTAIN_Junctions_StormwaterScenariosUrbn2.csv")
+#temp2 <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_percentiles_SUSTAIN_Junctions_StormwaterScenariosUrbn2.csv")
+#temp.all <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_percentiles_SUSTAIN_Junctions_StormwaterScenariosUrbn.csv")
+#test <- temp.all %>% 
+  #bind_rows(temp2)
+#write.csv(test, row.names = FALSE, file="C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_percentiles_SUSTAIN_Junctions_StormwaterScenarios_BMPUrbn.csv")

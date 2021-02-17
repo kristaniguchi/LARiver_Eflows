@@ -17,7 +17,9 @@ node.ranges <- unique(ranges$Node)
 
 #Read in FFM percentiles from scenarios
 #ffm.all <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results_FFMs/FFM_percentiles_GLEN_F319wardlow_scenarios.csv")
+#ffm.all <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results_FFMs/FFM_percentiles_allnodes_scenarios.csv")
 ffm.all <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results_FFMs/FFM_percentiles_allnodes_scenarios.csv")
+
 #add in baseline FFM percentiles and combine with ffm.all
 baseline.ffm <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/FFM_percentiles_reportingnodes_all.csv")
 #save scenario as 0 - baseline
@@ -36,10 +38,10 @@ iterations[501,] <- c(0, 44.75, 8.85, 17.31, WRP100_Qcfs, 73.03)
 
 #read in FFM percentiles from SUSTAIN stormwater scenarios and urban baseflow [in same dataframe]
 #NEED TO UPDATE NAME: read in all BMP scenarios - excluding those without BMPs (baseline + urban drool removal)
-ffm.urbn.capture <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_percentiles_SUSTAIN_Junctions_StormwaterScenarios_BMPUrbn.csv")
+ffm.bmp.urbn <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_percentiles_SUSTAIN_Junctions_StormwaterScenarios_BMPUrbn.csv")
 #read in urban baseflow removal scenarios (those labeled with "baseline" meaning no BMPs)
 #need to filter the urban data, too
-ffm.urbn.capture <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_percentiles_SUSTAIN_BaselineScenarios_urbn_only.csv")
+#ffm.urbn.capture <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_percentiles_SUSTAIN_BaselineScenarios_urbn_only.csv")
 
 
 #SUSTAIN scenario labels
@@ -75,7 +77,7 @@ ffm.all.join <- merge(ffm.all, reporting.node.names, by= "ReportingNode") %>%
   mutate(ScenarioType2 = "WRP")
 
 #join with reporting node names and FFM labels: to get the order of the nodes (upstream to downtream) and the reach order3
-ffm.all.join.urban <- merge(ffm.urbn.capture, reporting.node.names, by= "ReportingNode") %>% 
+ffm.all.join.bmp.urbn <- merge(ffm.bmp.urbn, reporting.node.names, by= "ReportingNode") %>% 
   select("X.","ReportingNode", "Description","p10","p25","p50","p75","p90","metric", "Scenario", "Reach", "order","order3","Reporting_Reach") %>% 
   merge(ffm.labels, by = "metric") %>% 
   mutate(ScenarioType = "Stormwater, Dry-Weather Diversions") %>% 
@@ -83,13 +85,13 @@ ffm.all.join.urban <- merge(ffm.urbn.capture, reporting.node.names, by= "Reporti
 
 
 #add in Avg_Q_cfs which is for WRP0, 50, 100
-ffm.all.join.urban$Avg_Q_cfs <- 0
+ffm.all.join.bmp.urbn$Avg_Q_cfs <- 0
 #find ind WRP50 and WRP100 scenarios and put i appropriate values
-ind.WRP50 <- grep("WRP50", ffm.all.join.urban$Scenario)
-ffm.all.join.urban$Avg_Q_cfs[ind.WRP50] <- WRP50_Qcfs
+ind.WRP50 <- grep("WRP50", ffm.all.join.bmp.urbn$Scenario)
+ffm.all.join.bmp.urbn$Avg_Q_cfs[ind.WRP50] <- WRP50_Qcfs
 #WRP 100
-ind.WRP100 <- grep("WRP100", ffm.all.join.urban$Scenario)
-ffm.all.join.urban$Avg_Q_cfs[ind.WRP100] <- WRP100_Qcfs
+ind.WRP100 <- grep("WRP100", ffm.all.join.bmp.urbn$Scenario)
+ffm.all.join.bmp.urbn$Avg_Q_cfs[ind.WRP100] <- WRP100_Qcfs
 
 
 #loop through the scenarios to plot percentiles scenarios curve
@@ -106,7 +108,7 @@ for(i in 1:length(unique.nodes)){
   ranges.sub <- ranges[ranges$Node == unique.nodes[i],]
   
   #subset SUSTAIN scenarios to node i
-  ffm.sub.urban <- ffm.all.join.urban[ffm.all.join.urban$ReportingNode == unique.nodes[i],]
+  ffm.sub.urban <- ffm.all.join.bmp.urbn[ffm.all.join.bmp.urbn$ReportingNode == unique.nodes[i],]
   
   #loop to create sensitivity curves for each metric
   for(j in 1:length(metrics.to.plot)){

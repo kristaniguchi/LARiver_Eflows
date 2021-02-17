@@ -30,24 +30,26 @@ set_token(mytoken)
 
 #directory with flow output from 500 scenarios
 #laptop or desktop need to update:
-wd <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results/"
-#wd <- "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results/"
+#wd <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results/"
+wd <- "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results/"
 
 #list files
 flow.files <- list.files(wd, full.names = TRUE)
 flow.file.name <- list.files(wd)
 
 #set output directory - change depending on laptop or desktop
-output.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results_FFMs/"
-#output.dir <- "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results_FFMs/"
+#output.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results_FFMs/"
+output.dir <- "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results_FFMs/"
 
 
 #COMID for each reporting node
-comid.node <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/reportingnodes_COMID.csv")%>% 
+#comid.node <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/reportingnodes_COMID.csv")%>% 
+comid.node <- read.csv("C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/reportingnodes_COMID.csv")%>% 
   rename(ReportingNode = Name)
 
 #Reporting node description file
-reporting.node.names <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/200827_draft-reporting-nodes-v4.csv")
+#reporting.node.names <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/200827_draft-reporting-nodes-v4.csv")
+reporting.node.names <- read.csv("C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/200827_draft-reporting-nodes-v4.csv")
 reporting.node.names <- rename(reporting.node.names, ReportingNode = SWMM.Node )
 
 
@@ -63,7 +65,15 @@ ffm.labels$metric <- ffm.labels$flow_metric
 #create empty percentiles df with all summary values
 percentiles.all <- data.frame(matrix(NA,1,11))
 names(percentiles.all) <- c("p10","p25","p50","p75","p90","metric","comid","result_type", "source2","ReportingNode", "Scenario")
-#i = 7 # test GLEN
+#create empty df with all annual results from each scenario
+results.all <- data.frame(matrix(NA, 1, 30))
+names(results.all) <- c("Year","DS_Dur_WS","DS_Tim","DS_Mag_50","DS_Mag_90","FA_Dur","FA_Mag","FA_Tim","SP_ROC","SP_Dur","SP_Mag","SP_Tim","Wet_BFL_Dur",
+                        "Wet_BFL_Mag_10","Wet_BFL_Mag_50","Wet_Tim","Peak_Tim_10","Peak_Tim_2","Peak_Tim_5","Peak_Dur_10","Peak_Dur_2","Peak_Dur_5","Peak_10","Peak_2",       
+                        "Peak_5","Peak_Fre_10","Peak_Fre_2","Peak_Fre_5","ReportingNode","Scenario")
+
+
+#test out certain nodes
+i = 7 # test GLEN
 #i =  2 #F319 wardlow
 
 for(i in 1:length(flow.files)){
@@ -108,6 +118,16 @@ for(i in 1:length(flow.files)){
     
     #save scenario percentiles into percentiles.all df
     percentiles.all <- data.frame(rbind(percentiles.all, scenario.percentiles.all))
+    
+    #pull out the wet, moderate, and dry year annual results
+    #annual results
+    scenario.results.ffm.all <- ffc$ffc_results
+    scenario.results.ffm.all$ReportingNode <- rep(node, length(scenario.results.ffm.all$Year))
+    scenario.results.ffm.all$Scenario <- rep(j-1, length(scenario.results.ffm.all$Year))
+    
+    #save annual results into results.all df
+    results.all <- data.frame(rbind(results.all, scenario.results.ffm.all))
+    
 
     #if first scenario, pull ref predictions and save
     if(j == 2){
@@ -123,6 +143,8 @@ for(i in 1:length(flow.files)){
   }
   #Write percentiles all for backup
   write.csv(percentiles.all, file = paste0(output.dir, "/FFM_percentiles_allnodes_scenarios.csv"))
+  #Write annual results all for backup
+  write.csv(results.all, file = paste0(output.dir, "/FFM_annual_results_allnodes_scenarios.csv"))
   
 }
 
@@ -131,8 +153,7 @@ percentiles.all2 <- percentiles.all[2:length(percentiles.all$p10),]
 #save reporting node column as class
 percentiles.all2$ReportingNode <- as.character(percentiles.all2$ReportingNode)
 #write percentiles.all
-#write.csv(percentiles.all2, file = "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/FFM_percentiles_reportingnodes_all.csv")
-write.csv(percentiles.all2, file = paste0(output.dir, "/FFM_percentiles_allnodes_scenarios_02102021.csv"))
+write.csv(percentiles.all2, file = paste0(output.dir, "/FFM_percentiles_allnodes_scenarios_02172021.csv"))
 
 
 

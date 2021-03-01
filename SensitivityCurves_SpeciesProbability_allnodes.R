@@ -1,6 +1,6 @@
 #WRP Scenarios Species Occurrence Sensitivity Curves for FFMs - all reporting nodes using seasonal mean probability (scaled from 1-0 prob)
-#loop through all nodes and generate sensitivity curves
-#curves for WRP and overlay with flow ranges
+  #loop through all nodes and generate species-based sensitivity curves
+  #curves for WRP scenarios only - will add stormwater/stormdrain scenarios later
 
 #other packages
 library("ggplot2")
@@ -113,7 +113,7 @@ prob.all.WRP.join <- merge(prob.all.WRP, reporting.node.names, by= "ReportingNod
   mutate(ScenarioType = "WRP") %>% 
   mutate(ScenarioType2 = "WRP")
 
-
+#need to add stormwater/stormdrain scenarios after data is processed
 #join Stormwater urbn with reporting node names and FFM labels: to get the order of the nodes (upstream to downtream) and the reach order3
 # ffm.all.join.bmp.urbn <- merge(ffm.bmp.urbn, reporting.node.names, by= "ReportingNode") %>% 
 #   select("X.","ReportingNode", "Description","p10","p25","p50","p75","p90","metric", "Scenario", "Reach", "order","order3","Reporting_Reach") %>% 

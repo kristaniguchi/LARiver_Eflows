@@ -19,11 +19,11 @@
 
 #tidal directories
 ##tidal baseline
-raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Tidal_LA1LA2/Baseline/" #baseline scenarios
+#raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Tidal_LA1LA2/Baseline/" #baseline scenarios
 ##tidal stormdrain scenarios
 #raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Tidal_LA1LA2/StormDrain-Dryweather0_WRP/" #stormwater scenarios
 ##tidal WRP scenarios
-#raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Tidal_LA1LA2/WRP/" #WRP scenarios
+raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Tidal_LA1LA2/WRP/" #WRP scenarios
 
 
 #list files
@@ -139,6 +139,12 @@ for(i in 1:length(files)){
   #find the col indices for vel
   vel.cols <- col.names[grep("Vel", col.names)]
   depth.cols2 <- col.names[grep("Depth", col.names)]
+  
+  #if LA1, remove the vel columns for LOB and ROB (no overbanks at this node but outputs are there with NA)
+  if(nodes[i] == "LA1"){
+    ind.vel.mc <- grep("MC", vel.cols)
+    vel.cols <- vel.cols[ind.vel.mc]
+  }
   #if vel < 0 change the depth to 0, if depth == 0 change all values to 0 in position
   #if more than one vel columns (LOB, MC, ROB), replace, else if only one (MC), only replace MC
   if(length(vel.cols)> 1){

@@ -10,7 +10,7 @@ library("plyr")
 library("tidyverse")
 
 #read in flow ranges for specific reporting nodes and species-lifestage
-ranges <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/Flow recommendations report/Typha_Steelhead_Cladophora_SAS_Willow_02_05_2021_updated_KI.csv")
+ranges <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/Flow recommendations report/MM_March02_Typha_Steelhead_Cladophora_SAS_Willow_02_05_2021_updated_KI_MM.csv")
 #find unique nodes where sensitivity curves should be generated
 node.ranges <- unique(ranges$Node)
 
@@ -60,10 +60,12 @@ ffm.bmp.urbn <- read.csv("C:/Users/KristineT/Documents/Git/LARiver_Eflows/FFM_pe
 sustain.scenarios <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Sustain_ScenarioNumbers.csv")
 
 #output directory where sensitivity curves to be saved
-out.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results_FFMs/scenario_curves_FFM/"
+out.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results_FFMs/scenario_curves_FFM_all/"
+dir.create(out.dir)
+
 #output directory for BMP curves
 out.dir.bmp <- paste0(out.dir, "Stormwater_Urbn_Scenario_Curves/")
-#dir.create(out.dir.bmp)
+dir.create(out.dir.bmp)
 
 #Reporting node description file
 reporting.node.names <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/200827_draft-reporting-nodes-v4.csv")
@@ -126,12 +128,17 @@ ffm.all.join.bmp.urbn$spring[ind.WRP100] <- baseline.spring
 
 
 #loop through the scenarios to plot percentiles scenarios curve
-unique.nodes <- unique(ffm.all.join$ReportingNode)
+#change to unique nodes from bmp urban scenarios
+unique.nodes <- unique(ffm.all.join.bmp.urbn$ReportingNode)
+#unique.nodes <- unique(ffm.all.join$ReportingNode)
+
 #only run for GLEN for TAC presentation
-i <- grep("GLEN", unique.nodes)
+#i <- grep("GLEN", unique.nodes)
+#do not make sensitivity curves for LA1 and LA2 [tidal influence]
+unique.nodes <- unique.nodes[unique.nodes != "LA1" & unique.nodes != "LA2" ]
 
 
-#for(i in 1:length(unique.nodes)){
+for(i in 1:length(unique.nodes)){
   
   #subset flow ranges to node i
   ranges.sub <- ranges[ranges$Node == unique.nodes[i],]
@@ -275,7 +282,7 @@ i <- grep("GLEN", unique.nodes)
     print(p)
     #save
     file.name <- paste0(out.dir, "points_", unique.nodes[i], "_", metric.info$metric, "_WRP_Sensitivity_Curve_seasonal.jpg")
-    ggsave(p, filename=file.name, dpi=300, height=5, width=7)
+    #ggsave(p, filename=file.name, dpi=300, height=5, width=7)
     
    #DRY plot only: take out wet and moderate and only show dry
     p.50 <- p + 
@@ -283,7 +290,7 @@ i <- grep("GLEN", unique.nodes)
     geom_point(ffm.sub.metric.j, mapping = aes(x=seasonal.wrp.Q, y = p10), color = "white") 
     #save
     file.name <- paste0(out.dir, "points_", unique.nodes[i], "_", metric.info$metric, "_WRP_Sensitivity_Curve_p50.jpg")
-    ggsave(p.50, filename=file.name, dpi=300, height=5, width=7)
+    #ggsave(p.50, filename=file.name, dpi=300, height=5, width=7)
     
     
     
@@ -338,8 +345,6 @@ i <- grep("GLEN", unique.nodes)
       #save
       file.name <- paste0(out.dir, "points_", unique.nodes[i], "_", metric.info$metric, "_WRP_Sensitivity_Curve_optimal.lowerlimit.jpg")
       ggsave(p.flowrange, filename=file.name, dpi=300, height=5, width=7)
-      
-      
     }
     
     

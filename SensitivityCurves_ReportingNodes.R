@@ -131,6 +131,10 @@ ffm.all.join.bmp.urbn$spring[ind.WRP100] <- baseline.spring
 #change to unique nodes from bmp urban scenarios
 unique.nodes <- unique(ffm.all.join.bmp.urbn$ReportingNode)
 #unique.nodes <- unique(ffm.all.join$ReportingNode)
+unique.urban.nodes <- unique(ffm.all.join.bmp.urbn$ReportingNode)
+unique.wrp.nodes <- unique(ffm.all.join$ReportingNode)
+#find missing nodes not in urban
+unique.wrp.nodes[!(unique.wrp.nodes %in% unique.urban.nodes)]
 
 #only run for GLEN for TAC presentation
 #i <- grep("GLEN", unique.nodes)
@@ -275,11 +279,11 @@ for(i in 1:length(unique.nodes)){
       scale_color_manual(values = colors, labels = labels1, name="Flow Percentile") +
       theme_bw() +
       geom_vline(xintercept=baseline.metric, linetype="dashed", color = "black") +
-      geom_text(aes(x= baseline.metric-1, y = 25, label = "Baseline WRP", angle=90), color = "black")+
+      geom_text(aes(x= baseline.metric-1, y = min(data.plot$Value)+10, label = "Baseline WRP", angle=90), color = "black")+
       theme(panel.border = element_blank(), panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
     #print plot
-    print(p)
+    #print(p)
     #save
     file.name <- paste0(out.dir, "points_", unique.nodes[i], "_", metric.info$metric, "_WRP_Sensitivity_Curve_seasonal.jpg")
     #ggsave(p, filename=file.name, dpi=300, height=5, width=7)
@@ -319,7 +323,7 @@ for(i in 1:length(unique.nodes)){
       labs(title = paste0("WRP Sensitivity Curve: ", unique.nodes[i]), subtitle=metric.info$title_name,
            color = "Legend") + ylab(metric.title) +
       geom_vline(xintercept=baseline.metric, linetype="dashed", color = "black") +
-      geom_text(aes(x= baseline.metric-1, y = 25, label = "Baseline WRP", angle=90), color = "black")+
+      geom_text(aes(x= baseline.metric-1, y = min(data.plot$Value)+10, label = "Baseline WRP", angle=90), color = "black")+
       xlab(x.axis) + 
       theme_bw() + 
       theme(panel.border = element_blank(), panel.grid.major = element_blank(),
@@ -329,6 +333,11 @@ for(i in 1:length(unique.nodes)){
     file.name2 <- paste0(out.dir, "smoothcurve_", unique.nodes[i], "_", metric.info$metric, "_WRP_Sensitivity_Curve.jpg")
     ggsave(p2, filename=file.name2, dpi=300, height=5, width=5)
     
+    #baseline WRP p50
+    baselinep50 <- max(ffm.sub.metric.j$p50)
+    WRP0_p50 <- min(ffm.sub.metric.j$p50)
+    change.baseline.0 <- baselinep50 - WRP0_p50
+    
     ###########add in optimal flow range lower limit to WYT plot
     #overlay optimal flow range on dry year for GLEN only
     if(unique.nodes[i] == "GLEN"){
@@ -337,14 +346,14 @@ for(i in 1:length(unique.nodes)){
         geom_hline(yintercept=77, color = "grey") 
       #save
       file.name <- paste0(out.dir, "smoothcurve_", unique.nodes[i], "_", metric.info$metric, "_WRP_Sensitivity_Curve_optimal.lowerlimit.jpg")
-      ggsave(p.flowrange2, filename=file.name, dpi=300, height=5, width=5)
+      #ggsave(p.flowrange2, filename=file.name, dpi=300, height=5, width=5)
       
       #points plot
       p.flowrange <- p + 
         geom_hline(yintercept=77, color = "grey") 
       #save
       file.name <- paste0(out.dir, "points_", unique.nodes[i], "_", metric.info$metric, "_WRP_Sensitivity_Curve_optimal.lowerlimit.jpg")
-      ggsave(p.flowrange, filename=file.name, dpi=300, height=5, width=7)
+      #ggsave(p.flowrange, filename=file.name, dpi=300, height=5, width=7)
     }
     
     
@@ -372,7 +381,7 @@ for(i in 1:length(unique.nodes)){
     lower.bound0 <- urban0$p10
     
     
-    #50% reduction plot with smooth curve
+    #100% reduction plot with smooth curve
     urban0.p <- p2 +
       geom_ribbon(data = urban0, aes(ymin=lower.bound0, ymax=upper.bound0), alpha=0.2, fill = "red") +
       geom_line(data = urban0, mapping = aes(x=seasonal.wrp.Q, y = p50),color="#d73027", linetype="twodash", lwd=1) 
@@ -382,7 +391,7 @@ for(i in 1:length(unique.nodes)){
     ggsave(urban0.p, filename=file.name2, dpi=300, height=5, width=5)
     
     
-    #100% reduction plot with smooth curve
+    #50% reduction plot with smooth curve
     urban50.p <- urban0.p +
       geom_ribbon(data = urban50, aes(ymin=lower.bound50, ymax=upper.bound50), alpha=0.5, fill = "#fee090") +
       geom_line(data = urban50, mapping = aes(x=seasonal.wrp.Q, y = p50),color="#fc8d59", linetype="twodash", lwd=1) 
@@ -391,7 +400,19 @@ for(i in 1:length(unique.nodes)){
     file.name2 <- paste0(out.dir.bmp, "smoothcurve_", unique.nodes[i], "_", metric.info$metric, "_WRP_Sensitivity_Curve_50Urbanflow.jpg")
     ggsave(urban50.p, filename=file.name2, dpi=300, height=5, width=5)
     
-
+    
+    #Change in baseline and urban 50 and 100 scenarios p50
+    baselinep50 - WRP0_p50
+    #urban 50 and 0 with baseline WRP
+    baseline_urban50_p50 <- max(urban50$p50)
+    baseline_urban0_p50 <- max(urban0$p50)
+    #urban 50 and 0 with 0 WRP
+    WRP0_urban50_p50 <- min(urban50$p50)
+    WRP0_urban0_p50 <- min(urban0$p50)
+    #change in baseline to baseline urban50
+    change.baseline.urban50 <- baselinep50 - baseline_urban50_p50
+    change.baseline.urban0 <- baselinep50 - baseline_urban0_p50
+    ((WRP0_urban0_p50-baselinep50)/baselinep50)*100
     ####################################
     ########ADD in flow ranges for each node and wet or dry season baseflow plot if flow ranges are available for that node
     # 

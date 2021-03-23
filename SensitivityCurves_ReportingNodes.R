@@ -1,6 +1,7 @@
 #WRP Scenarios Sensitivity Curves for FFMs - all reporting nodes
   #loops through all nodes and generates flow-based sensitivity curves
   #curves for WRP and stormwater/stormdrain reduction scenarios
+  #uses seasonal average WRP for each reporting node and scenario
 
 #other packages
 library("ggplot2")

@@ -29,29 +29,11 @@ baseline.ffm$Scenario <- 0
 #add rows to ffm.all
 ffm.all <- add_row(ffm.all, baseline.ffm)
 
+#read in WRP scenario labels with seasonal WRP  and various values for each reporting node based on which WRP discharges to it
+iterations <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/manuscripts/sensitivitycurves_FFMs/summary_seasonalWRP_node.csv") %>% 
+  rename(dry_season=dry, wet_season=wet, spring=spr)
 
-#WRP scenario labels
-iterations <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/iterations_labeled.csv")
-#find max av_q_cfs and half of that to get WRP100 and WRP50 for av annual WRP discharge
-WRP100_Qcfs <- 70.9
-WRP50_Qcfs <- WRP100_Qcfs/2
-#add in baseline scenario 0  as 70.9 cfs
-iterations[501,] <- c(0, 44.75, 8.85, 17.31, WRP100_Qcfs, 73.03)
 
-#read in seasonal WRP values and combine with iterations - this is for GLEN, may have different values depending on reporting node
-seasonal.wrp <- read.csv("C:/Users/KristineT/Documents/Git/LARiver_Eflows/seasonal_WRP_discharge_GLEN.csv") %>% 
-  rename(Scenario = scenario)
-#merge with iterations
-iterations <- iterations %>% 
-  join(seasonal.wrp, by = "Scenario")
-#UPDATE WITH BASELINE VALUES: add in baseline 0 seasonal Q
-baseline.dry <- 67.46948696
-baseline.wet <- 74.9882904
-baseline.spring <- 67.52783375
-#save in baseline scenario 501
-iterations$dry_season[501] <- baseline.dry
-iterations$wet_season[501] <- baseline.wet
-iterations$spring[501] <- baseline.spring
 
 #read in FFM percentiles from SUSTAIN stormwater scenarios and stormdrain reduction scenarios [in same dataframe], includes baseline
 #ffm.bmp.urbn <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_percentiles_SUSTAIN_Junctions_StormwaterScenariosUrbn.csv")
@@ -84,12 +66,15 @@ metrics.to.plot <- c("Wet_BFL_Mag_10", "DS_Mag_50") #, "Wet_BFL_Mag_50", "DS_Mag
 #metrics.to.plot <- c("Wet_BFL_Mag_10", "Wet_BFL_Mag_50", "DS_Mag_50", "DS_Mag_90", "Peak_2")
 
 
+
+
+
 #join WRP with reporting node names and FFM labels: to get the order of the nodes (upstream to downtream) and the reach order3
 #WRP percentiles join
 ffm.all.join <- merge(ffm.all, reporting.node.names, by= "ReportingNode") %>% 
   select("X.","ReportingNode", "Description","p10","p25","p50","p75","p90","metric", "Scenario", "Reach", "order","order3","Reporting_Reach") %>% 
   merge(ffm.labels, by = "metric") %>% 
-  merge(iterations, by = "Scenario") %>% 
+  #merge(iterations, by = "Scenario") %>% 
   mutate(ScenarioType = "WRP") %>% 
   mutate(ScenarioType2 = "WRP")
 
@@ -101,31 +86,6 @@ ffm.all.join.bmp.urbn <- merge(ffm.bmp.urbn, reporting.node.names, by= "Reportin
   merge(sustain.scenarios, by = "Scenario") %>% 
   mutate(ScenarioType = "Stormwater, Stormdrain Diversions") %>% 
   mutate(ScenarioType2 = Scenario)
-
-
-#add in Avg_Q_cfs which is for WRP0, 50, 100
-#Percentiles:
-ffm.all.join.bmp.urbn$Avg_Q_cfs <- 0
-#find ind WRP50 and WRP100 scenarios and put i appropriate values
-ind.WRP50 <- grep("WRP50", ffm.all.join.bmp.urbn$Scenario)
-ffm.all.join.bmp.urbn$Avg_Q_cfs[ind.WRP50] <- WRP50_Qcfs
-#WRP 100
-ind.WRP100 <- grep("WRP100", ffm.all.join.bmp.urbn$Scenario)
-ffm.all.join.bmp.urbn$Avg_Q_cfs[ind.WRP100] <- WRP100_Qcfs
-
-#Add in seasonal percentiles for each WRP
-ffm.all.join.bmp.urbn$dry_season <- 0
-ffm.all.join.bmp.urbn$wet_season <- 0
-ffm.all.join.bmp.urbn$spring <- 0
-#replace all WRP50 with seasonal wrp/2
-ffm.all.join.bmp.urbn$dry_season[ind.WRP50] <- baseline.dry/2
-ffm.all.join.bmp.urbn$wet_season[ind.WRP50] <- baseline.wet/2
-ffm.all.join.bmp.urbn$spring[ind.WRP50] <- baseline.spring/2
-#replace all ind.WRP100 with seasonal wrp
-ffm.all.join.bmp.urbn$dry_season[ind.WRP100] <- baseline.dry
-ffm.all.join.bmp.urbn$wet_season[ind.WRP100] <- baseline.wet
-ffm.all.join.bmp.urbn$spring[ind.WRP100] <- baseline.spring
-
 
 
 #loop through the scenarios to plot percentiles scenarios curve
@@ -153,6 +113,35 @@ for(i in 1:length(unique.nodes)){
   ffm.sub <- ffm.all.join[ffm.all.join$ReportingNode == unique.nodes[i],]
   #subset SUSTAIN scenarios to node i
   ffm.sub.urban <- ffm.all.join.bmp.urbn[ffm.all.join.bmp.urbn$ReportingNode == unique.nodes[i],]
+  
+  #add in scenario WRP Q data for node i
+  #subset WRP iterations for node i
+  iterations.node <- iterations[iterations$ReportingNode == unique.nodes[i],] %>% 
+    select(Scenario, dry_season, wet_season, spring)
+  #WRP iterations merge with ffm.sub
+  ffm.sub <- ffm.sub %>% 
+    merge(iterations.node, by="Scenario")
+  
+  #add in scenario WRPQ data for node i - urban scenarios
+  #find ind WRP50 and WRP100 scenarios and put i appropriate values
+  ind.WRP50 <- grep("WRP50", ffm.sub.urban$Scenario)
+  #WRP 100
+  ind.WRP100 <- grep("WRP100", ffm.sub.urban$Scenario)
+  #find baseline dry, wet, spring for that node
+  baselines <- iterations.node[iterations.node$Scenario == 0,]
+  
+  #Add in seasonal WRP Q, start with all 0 for WRP0 and will replace with values
+  ffm.sub.urban$dry_season <- 0
+  ffm.sub.urban$wet_season <- 0
+  ffm.sub.urban$spring <- 0
+  #replace all WRP50 with seasonal wrp/2
+  ffm.sub.urban$dry_season[ind.WRP50] <- baselines$dry_season/2
+  ffm.sub.urban$wet_season[ind.WRP50] <- baselines$wet_season/2
+  ffm.sub.urban$spring[ind.WRP50] <- baselines$spring/2
+  #replace all ind.WRP100 with seasonal wrp
+  ffm.sub.urban$dry_season[ind.WRP100] <- baselines$dry_season
+  ffm.sub.urban$wet_season[ind.WRP100] <- baselines$wet_season
+  ffm.sub.urban$spring[ind.WRP100] <- baselines$spring
   
 
   #loop to create sensitivity curves for each metric

@@ -1,5 +1,5 @@
 #WRP Scenarios Species Occurrence Sensitivity Curves for FFMs - all reporting nodes using seasonal mean probability (scaled from 1-0 prob)
-  #loop through all nodes and generate species-based sensitivity curves
+  #For GLEN only but can loop through all nodes and generate species-based sensitivity curves
   #curves for WRP scenarios only - will add stormwater/stormdrain scenarios later
 
 #other packages

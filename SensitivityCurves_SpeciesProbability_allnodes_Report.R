@@ -406,6 +406,8 @@ for(i in 1:length(unique.nodes)){
         lower.fit <- data.frame(predict(lower.curve, se=TRUE ))
         #set minimum as zero
         lower.fit$fit[lower.fit$fit < 0] <- 0
+        min.lowerfit <- min(lower.fit$fit)
+        ymin.wrp <- ifelse(min.lowerfit < ymin.wrp, min.lowerfit, ymin.wrp)
         
         #plot with stat smooth WRP curve
         p2.life.stage <- ggplot(wrp.sub.metric.j.life.stage, aes(x=seasonal.wrp.Q, y = p50), color="blue") +
@@ -416,7 +418,7 @@ for(i in 1:length(unique.nodes)){
                color = "Legend") + ylab(subtitle.lab) +
           geom_vline(xintercept=baseline.metric, linetype="dashed", color = "black") +
           #geom_hline(yintercept=0.5, linetype="dotted", color = "black") +
-          geom_text(aes(x= baseline.metric-1, y = ymin.wrp+0.05, label = "Baseline WRP", angle=90), color = "black")+
+          geom_text(aes(x= baseline.metric-1, y = ymin.wrp+0.075, label = "Baseline WRP", angle=90), color = "black")+
           xlab(x.axis) + 
           theme_bw() + 
           ylim(c(ymin.wrp*0.7, ymax.wrp)) +

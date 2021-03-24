@@ -19,11 +19,11 @@
 
 #tidal directories
 ##tidal baseline
-#raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Tidal_LA1LA2/Baseline/" #baseline scenarios
+raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Tidal_LA1LA2/Baseline/" #baseline scenarios
 ##tidal stormdrain scenarios
 #raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Tidal_LA1LA2/StormDrain-Dryweather0_WRP/" #stormwater scenarios
 ##tidal WRP scenarios
-raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Tidal_LA1LA2/WRP/" #WRP scenarios
+#raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Tidal_LA1LA2/WRP/" #WRP scenarios
 
 
 #list files
@@ -70,8 +70,8 @@ for(i in 1:length(files)){
   #new chunk to account for reformatted output without hydraulic depth, old had hyd depth included in outputs
   #if hydraulic depth column missing (only max depth outputted), need to add in dummy hydraulic depth columns for the channel locations with data
   if(length(depth.col.names == 1)){
-    #find channel positions with output data velocity
-    num.positions <- length(grep("Vel", col.names))
+    #find channel positions with output data shear
+    num.positions <- length(grep("Shear", col.names))
     #if 3 channel positions, create dummy for LOB, MC, ROB
     if(num.positions == 3) {
       #create dummy hyd depth columns to mimic original output format

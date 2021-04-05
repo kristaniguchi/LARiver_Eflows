@@ -2,7 +2,6 @@
 #FFM boxplots: metric units
 #UPDATE: exclude LA 1 and 2 from plots for now
 
-
 #other packages
 library("ggplot2")
 library("scales")
@@ -123,7 +122,7 @@ for(k in 1:(length(unique.metrics)-1)){
       annotate(geom = "text", x = 3.2, y = max.all, label = "Burbank", angle = 90) +
       annotate(geom = "text", x = 2.2, y = max.all, label = "Tillman", angle = 90) 
   }
-
+  
   print(b)
   file.name <- paste0("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/0boxplots_metricunits/", metric.info$metric, "_boxplot_reportingnodes.jpg")
   ggsave(b, filename=file.name, dpi=300, height=5, width=9.5)

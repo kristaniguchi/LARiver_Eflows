@@ -78,6 +78,8 @@ percentiles.all.sort2 <- percentiles.all.join[order(percentiles.all.join$metric,
 #UPDATE: exclude LA1 and LA2 from boxplots --> tidal influence, rio hondo and CC
 exclude <- c("LA1", "LA2", "F45B", "11101250", "F37B")
 percentiles.all.sort2 <- percentiles.all.sort2[-which(percentiles.all.sort2$ReportingNode %in% exclude),]
+#find range in p50 dsmag50
+range(percentiles.all.sort2$p50[percentiles.all.sort2$metric == "DS_Mag_50"])
 
 for(k in 1:(length(metrics.to.plot))){
   #### filter  based on metric k#### 

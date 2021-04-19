@@ -1,4 +1,4 @@
-#Sensitivity Curves faceted for flow recommendations report appendix
+#Sensitivity Curves for flow recommendations report appendix
 #WRP Scenarios Sensitivity Curves for FFMs - all reporting nodes
 #loops through all nodes and generates flow-based sensitivity curves
 #curves for WRP and stormwater/stormdrain reduction scenarios
@@ -223,7 +223,7 @@ for(i in 1:length(unique.nodes)){
       
       
       #x axis label for seasonal wrp
-      x.axis <- "Average Dry-Season WRP Discharge (cfs)"
+      x.axis <- "Average Annual Dry-Season WRP Discharge (cfs)"
       baseline.metric <- baselines$dry_season
       #y max needs to be max of wetseason baseflow (same scale)
       #subset to 
@@ -248,7 +248,7 @@ for(i in 1:length(unique.nodes)){
       
       
       #x axis label for seasonal wrp
-      x.axis <- "Average Wet-Season WRP Discharge (cfs)"
+      x.axis <- "Average Annual Wet-Season WRP Discharge (cfs)"
       baseline.metric <- baselines$wet_season
       #find max from wet season baseflow to use same y scale on both plots
       y.max.WRP <- max(ffm.sub.metric.j$p90)
@@ -354,12 +354,39 @@ for(i in 1:length(unique.nodes)){
       geom_line(data = urban50, mapping = aes(x=seasonal.wrp.Q, y = p50),color="#fc8d59", linetype="twodash", lwd=1) +
       labs(title = paste0("Dry Weather Stormdrain Reduction: ", unique.nodes[i]), subtitle=metric.info$title_name,
            color = "Legend") 
-      
+    
     
     #save
     file.name2 <- paste0(out.dir.bmp, unique.nodes[i], "_", metric.info$metric, "_DryweatherStormdrain_Flow_Sensitivity_Curve.jpg")
     ggsave(urban50.p, filename=file.name2, dpi=300, height=5, width=5)
     
+    #if GLEN add in lower limit line for optimal flow range used in report figures
+    if(unique.nodes[i] == "GLEN"){
+      #add lower limit to stormdrain reduction plot
+      urban50.p.limit <- urban50.p +
+        geom_hline(yintercept=77, linetype="dashed", color = "grey") +
+        geom_hline(yintercept=23, linetype="dashed", color = "grey")
+      #add lower limit to WRP curve basic
+      p2.limit <- p2 +
+        geom_hline(yintercept=77, linetype="dashed", color = "grey") +
+        geom_hline(yintercept=23, linetype="dashed", color = "grey")
+  
+      #if dry season, add upper limit of 166
+      if(length(dry.ind) > 0){
+        #add upper limit to stormdrain reduction plot
+        urban50.p.limit <- urban50.p.limit +
+          geom_hline(yintercept=166, linetype="dashed", color = "grey")
+        #add upper limit to WRP curve basic
+        p2.limit <- p2.limit +
+          geom_hline(yintercept=166, linetype="dashed", color = "grey")
+      }
+      #save stormdrain reduction with lower limits
+      file.name2 <- paste0(out.dir.bmp, unique.nodes[i], "_", metric.info$metric, "_DryweatherStormdrain_Flow_Sensitivity_Curve_limits.jpg")
+      ggsave(urban50.p.limit, filename=file.name2, dpi=300, height=5, width=5)
+      #save WRP curve with limits
+      file.name3 <- paste0(out.dir, unique.nodes[i], "_", metric.info$metric, "_WRP_Flow_Sensitivity_Curve_limits.jpg")
+      ggsave(p2.limit, filename=file.name3, dpi=300, height=5, width=5)
+    }
     
     #Change in baseline and urban 50 and 100 scenarios p50
     baselinep50 - WRP0_p50

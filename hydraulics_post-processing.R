@@ -15,11 +15,11 @@
 #raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/WRP_scenarios/" #WRP scenarios
 #raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Stormwater_Scenarios/" #stormwater scenarios
 #baseline hydraulics:
-#raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Baseline_hydraulic-results-v4-201130/"
+raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Baseline_hydraulic-results-v4-201130/"
 
 #tidal directories
 ##tidal baseline
-raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Tidal_LA1LA2/Baseline/" #baseline scenarios
+#raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Tidal_LA1LA2/Baseline/" #baseline scenarios
 ##tidal stormdrain scenarios
 #raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Tidal_LA1LA2/StormDrain-Dryweather0_WRP/" #stormwater scenarios
 ##tidal WRP scenarios

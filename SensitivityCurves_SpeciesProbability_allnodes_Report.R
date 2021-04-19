@@ -2,6 +2,7 @@
 #Loop through all nodes and generate species-based sensitivity curves
 #curves for WRP scenarios only - will add stormwater/stormdrain scenarios later
 ########need to subset to limiting factor for lifestage - plot bunches all of them up
+#######Update: scale y axis to 1 for all plots
 
 #other packages
 library("ggplot2")
@@ -12,7 +13,7 @@ library("tidyverse")
 
 
 #read in the probability of occurrence df for all species and nodes WRP scenarios
-prob.all <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/Flow recommendations report/X2a_mean_probs_all_spp_best_slices_WRP_scenarios_updatedMarch2021.csv") %>% 
+prob.all <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/Flow recommendations report/X2a_mean_probs_all_spp_best_slices_WRP_scenarios_updatedApril2021.csv") %>% 
   mutate(species.lifestage = paste0(SpeciesName, " ", LifeStageName )) %>% 
   mutate(species.lifestage.hyd = paste0(species.lifestage, " ", HydraulicName))
 #convert to upper case species.lifestage
@@ -31,7 +32,7 @@ prob.all2 <- prob.all %>%
   data.frame()
 
 #add in baseline results - this file is actually the stormwater scenario results but it includes baseline scenario #22, will filter to that first
-prob.baseline <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/Flow recommendations report/A2a_mean_probs_all_spp_best_slices_baseline_updatedMarch2021.csv") %>% 
+prob.baseline <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/Flow recommendations report/SW2a_mean_probs_all_spp_best_slices_stormwater_scenarios_updatedApril2021.csv") %>% 
   mutate(species.lifestage = paste0(SpeciesName, " ", LifeStageName, sep="" )) %>% 
   mutate(species.lifestage.hyd = paste0(species.lifestage, " ", HydraulicName)) %>% 
   #filter to scenario 22 from stormwater scenarios for baseline
@@ -79,7 +80,7 @@ sustain.scenarios <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study -
   rename(ScenarioName = Scenario, Scenario = ScenarioNumber)
 
 #read in SUSTAIN scenarios modeled
-prob.all.urban <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/Flow recommendations report/SW2a_mean_probs_all_spp_best_slices_stormwater_scenarios_updatedMarch2021.csv") %>% 
+prob.all.urban <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/Flow recommendations report/SW2a_mean_probs_all_spp_best_slices_stormwater_scenarios_updatedApril2021.csv") %>% 
   mutate(species.lifestage = paste0(SpeciesName, " ", LifeStageName )) %>% 
   rename(ReportingNode = Node) %>% 
   mutate(species.lifestage.hyd = paste0(species.lifestage, " ", HydraulicName))
@@ -128,7 +129,9 @@ out.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/Fl
 dir.create(out.dir)
 
 #output directory for BMP curves
-out.dir.bmp <- paste0(out.dir, "Dryweather_Flowbased/")
+#out.dir.bmp <- paste0(out.dir, "Dryweather_Stormdrain_allhydraulics/")
+#change if running only limiting factors
+out.dir.bmp <- paste0(out.dir, "Dryweather_Stormdrain_limitingfactors/")
 dir.create(out.dir.bmp)
 
 #create temp output for species 
@@ -200,6 +203,7 @@ for(i in 1:length(unique.nodes)){
   prob.sub.urban <- prob.all.join.bmp.urbn[prob.all.join.bmp.urbn$ReportingNode == unique.nodes[i],]
   #subset limiting factors to plot
   limiting.sub <- limiting.factors.plot[limiting.factors.plot$ReportingNode == unique.nodes[i],]
+  #add in limiting factors to plot for urban [if different than WRP]
   
   #add in scenario WRP Q data for node i
   #subset WRP iterations for node i
@@ -237,12 +241,12 @@ for(i in 1:length(unique.nodes)){
     #subset WRP to season j
     wrp.sub.metric.j1 <-  wrp.sub[wrp.sub$season == seasons.to.plot[j],]
     # #if want to plot all variables use this an omit 2 lines that subset to limiting factors
-    # wrp.sub.metric.j <-  wrp.sub[wrp.sub$season == seasons.to.plot[j],]
+     #wrp.sub.metric.j <-  wrp.sub[wrp.sub$season == seasons.to.plot[j],]
     
     #subset SUSTAIN scenarios to season j
     wrp.sub.metric.j.urban1 <-  prob.sub.urban[prob.sub.urban$season == seasons.to.plot[j],]
     # #if want to plot all variables use this an omit 2 lines that subset to limiting factors
-    # wrp.sub.metric.j.urban <-  prob.sub.urban[prob.sub.urban$season == seasons.to.plot[j],]
+     #wrp.sub.metric.j.urban <-  prob.sub.urban[prob.sub.urban$season == seasons.to.plot[j],]
     
     #limiting factors sub
     limiting.sub2 <- limiting.sub[limiting.sub$Season == seasons.to.plot[j],]
@@ -267,34 +271,34 @@ for(i in 1:length(unique.nodes)){
     data.plot$Percentile <- factor(data.plot$Percentile, levels = Percentile)
     
     #UPDATE HERE LATER
-    # #SUSTAIN pivot data
-    # #pivot longer .urban to format correctly
-    # data.plot.urban <- pivot_longer(wrp.sub.metric.j.urban, cols = c("p90", "p50", "p10"), names_to="Percentile", values_to="Value")
-    # data.plot.urban$Percentile <- factor(data.plot.urban$Percentile, levels = Percentile)
-    # #merge data with WRP data to plot in one graph with shape as ScenarioType
-    # #make Scenario from WRP
-    # data.plot2 <- data.plot %>% 
-    #   mutate(Scenario = as.character(data.plot$Scenario))
-    # #merge sustain scenarios with WRP plot data, all SUSTAIN scenarios
-    # data.plot.urban.merge <- data.plot.urban %>% 
-    #   bind_rows(data.plot2)
-    # #merge with sustain scenario labels (already merged outside loop)
-    # data.plot.urban.merge2 <- data.plot.urban.merge 
-    # #replace NA for WRP scenarios with WRP
-    # data.plot.urban.merge2$BMP_WRP[which(is.na(data.plot.urban.merge2$BMP_WRP))] <- "WRP"
-    # #replace NA for WRP scenarios with WRP
-    # data.plot.urban.merge2$UrbanBaseflow_name[which(is.na(data.plot.urban.merge2$UrbanBaseflow_name))] <- "WRP"
-    
-    # #subset to BMP WRP only - subset urban removal only
-    # #subset to all scenarios except urban50 and urban0 (baseflow removal scenarios)
-    # ind.urb50 <- grep("UBF50", data.plot.urban.merge2$Scenario)
-    # ind.urb0 <- grep("UBF0", data.plot.urban.merge2$Scenario)
-    # data.plot.urban.merge2.bmponly <- data.frame(data.plot.urban.merge2[-c(ind.urb50,ind.urb0),])
-    # #subset to baseflow scenarios only
-    # data.plot.urban.merge2.urbnonly <- data.plot.urban.merge2 %>% 
-    #   filter(BMP_WRP == "No BMPs") %>% 
-    #   filter(UrbanBaseflow_pctQ != "UBF100") %>% 
-    #   data.frame()
+    #SUSTAIN pivot data
+    #pivot longer .urban to format correctly
+    data.plot.urban <- pivot_longer(wrp.sub.metric.j.urban, cols = c("p90", "p50", "p10"), names_to="Percentile", values_to="Value")
+    data.plot.urban$Percentile <- factor(data.plot.urban$Percentile, levels = Percentile)
+    #merge data with WRP data to plot in one graph with shape as ScenarioType
+    #make Scenario from WRP
+    data.plot2 <- data.plot %>%
+      mutate(Scenario = as.character(data.plot$Scenario))
+    #merge sustain scenarios with WRP plot data, all SUSTAIN scenarios
+    data.plot.urban.merge <- data.plot.urban %>%
+      bind_rows(data.plot2)
+    #merge with sustain scenario labels (already merged outside loop)
+    data.plot.urban.merge2 <- data.plot.urban.merge
+    #replace NA for WRP scenarios with WRP
+    data.plot.urban.merge2$BMP_WRP[which(is.na(data.plot.urban.merge2$BMP_WRP))] <- "WRP"
+    #replace NA for WRP scenarios with WRP
+    data.plot.urban.merge2$UrbanBaseflow_name[which(is.na(data.plot.urban.merge2$UrbanBaseflow_name))] <- "WRP"
+
+    #subset to BMP WRP only - subset urban removal only
+    #subset to all scenarios except urban50 and urban0 (baseflow removal scenarios)
+    ind.urb50 <- grep("UBF50", data.plot.urban.merge2$Scenario)
+    ind.urb0 <- grep("UBF0", data.plot.urban.merge2$Scenario)
+    data.plot.urban.merge2.bmponly <- data.frame(data.plot.urban.merge2[-c(ind.urb50,ind.urb0),])
+    #subset to baseflow scenarios only
+    data.plot.urban.merge2.urbnonly <- data.plot.urban.merge2 %>%
+      filter(BMP_WRP == "No BMPs") %>%
+      filter(UrbanBaseflow_pctQ != "UBF100") %>%
+      data.frame()
     
     #if dry season, set x to dry season wrp
     
@@ -304,16 +308,16 @@ for(i in 1:length(unique.nodes)){
         rename(seasonal.wrp.Q = dry_season)
       wrp.sub.metric.j <- wrp.sub.metric.j %>% 
         rename(seasonal.wrp.Q = dry_season)
-      # wrp.sub.metric.j.urban <- wrp.sub.metric.j.urban %>% 
-      #   rename(seasonal.wrp.Q = dry_season)
-      # data.plot.urban.merge2.urbnonly <- data.plot.urban.merge2.urbnonly %>% 
-      #   rename(seasonal.wrp.Q = dry_season)
+      wrp.sub.metric.j.urban <- wrp.sub.metric.j.urban %>% 
+        rename(seasonal.wrp.Q = dry_season)
+      data.plot.urban.merge2.urbnonly <- data.plot.urban.merge2.urbnonly %>% 
+        rename(seasonal.wrp.Q = dry_season)
       
       #x axis label for seasonal wrp
       x.axis <- "Average Annual Dry-Season WRP Discharge (cfs)"
       baseline.metric <- baselines$dry_season
-      subtitle.lab <- "Dry-Season Probability of Occurrence"
-      y.axis <- "Average Annual Dry-Season Probability of Occurrence"
+      subtitle.lab <- "Dry-Season Probability of Ocurrence"
+      y.axis <- "Average Annual Dry-Season Probability of Ocurrence"
     }else{
       #rename wet season WRP to generic x name 
       #wrp data
@@ -321,16 +325,16 @@ for(i in 1:length(unique.nodes)){
         rename(seasonal.wrp.Q = wet_season)
       wrp.sub.metric.j <- wrp.sub.metric.j %>% 
         rename(seasonal.wrp.Q = wet_season)
-      # wrp.sub.metric.j.urban <- wrp.sub.metric.j.urban %>%
-      #   rename(seasonal.wrp.Q = wet_season)
-      # data.plot.urban.merge2.urbnonly <- data.plot.urban.merge2.urbnonly %>% 
-      #   rename(seasonal.wrp.Q = wet_season)
+      wrp.sub.metric.j.urban <- wrp.sub.metric.j.urban %>%
+        rename(seasonal.wrp.Q = wet_season)
+      data.plot.urban.merge2.urbnonly <- data.plot.urban.merge2.urbnonly %>% 
+        rename(seasonal.wrp.Q = wet_season)
       
       #x axis label for seasonal wrp
       x.axis <- "Average Annual Wet-Season WRP Discharge (cfs)"
       baseline.metric <- baselines$wet_season
-      subtitle.lab <- "Wet-Season Probability of Occurrence"
-      y.axis <- "Average Annual Wet-Season Probability of Occurrence"
+      subtitle.lab <- "Wet-Season Probability of Ocurrence"
+      y.axis <- "Average Annual Wet-Season Probability of Ocurrence"
       
     }
     
@@ -357,9 +361,9 @@ for(i in 1:length(unique.nodes)){
         theme(panel.border = element_blank(), panel.grid.major = element_blank(),
               panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
       #print plot
-      print(p.all)
+      #print(p.all)
       #save
-      file.name <- paste0(temp.output, unique.nodes[i], "_", seasons.to.plot[j], unique.species[m],"_Species_Sensitivity_Curve_allstage.jpg")
+      file.name <- paste0(temp.output, unique.nodes[i], "_", seasons.to.plot[j], "_", unique.species[m],"_Species_Sensitivity_Curve_allstage.jpg")
       ggsave(p.all, filename=file.name, dpi=300, height=5, width=7)
       
       #Loop to plot smooth curve for each life stage hydraulics
@@ -384,7 +388,6 @@ for(i in 1:length(unique.nodes)){
         #sub.life.stage.urban <- wrp.sub.metric.j.urban %>% 
           #filter(species.lifestage == uunique.species.lifestage)
 
-        
         #y axis max lim
         ymax.wrp <- max(wrp.sub.lifestage$p90) *1.1
         #if max >1, set to 1, else keep as is
@@ -414,7 +417,7 @@ for(i in 1:length(unique.nodes)){
           #geom_point() +
           geom_smooth(level=0) +
           geom_ribbon(aes(ymin=lower.fit$fit, ymax=upper.fit$fit), alpha=0.2, fill="#4575b4") +
-          labs(title = paste0("Species Sensitivity Curve: ", unique.nodes[i]), subtitle=paste0(unique.lifestage.hyd[n], " ",subtitle.lab),
+          labs(title = paste0("Species Sensitivity Curve: ", unique.nodes[i]), subtitle=paste0(subtitle.lab, ": ",unique.lifestage.hyd[n]),
                color = "Legend") + ylab(subtitle.lab) +
           geom_vline(xintercept=baseline.metric, linetype="dashed", color = "black") +
           #geom_hline(yintercept=0.5, linetype="dotted", color = "black") +
@@ -425,89 +428,101 @@ for(i in 1:length(unique.nodes)){
           theme(panel.border = element_blank(), panel.grid.major = element_blank(),
                 panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
         
-        p2.life.stage
+        #p2.life.stage
         #save
         file.name2 <- paste0(out.dir.species.lifestage.limitingfactor, unique.nodes[i], "_", unique.lifestage.hyd[n], "_",seasons.to.plot[j], "_Species_Sensitivity_Curve.jpg")
         ggsave(p2.life.stage, filename=file.name2, dpi=300, height=5, width=5)
         
+      
+        #####################################################
+        ####Create smooth sensitivity curve with urban baseflow removal scenarios only
+        #subset stormdrain scenarios to lifestage hydraulics
+        #wrp.sub.metric.j.urban.life.stage <- wrp.sub.metric.j.urban[wrp.sub.metric.j.urban$species.lifestage.hyd == unique.lifestage.hyd[n],]
+        data.plot.urban.merge2.urbnonly.lifestage.hyd <- data.plot.urban.merge2.urbnonly[data.plot.urban.merge2.urbnonly$species.lifestage.hyd == unique.lifestage.hyd[n],]
+        
+        #Subset 50% reduction urban and pivot wider
+        urban50 <- data.plot.urban.merge2.urbnonly.lifestage.hyd %>% 
+          filter(UrbanBaseflow_pctQ == "UBF50")  %>% 
+          pivot_wider(values_from = Value, names_from = Percentile) %>% 
+          data.frame()
+        
+        #50% reduction urban upper and lower bounds based on p90 and p10
+        upper.bound50 <- urban50$p90
+        #predict values 
+        lower.bound50 <- urban50$p10
+        
+        #Subset 100% reduction urban and pivot wider
+        urban0 <- data.plot.urban.merge2.urbnonly.lifestage.hyd %>% 
+          filter(UrbanBaseflow_pctQ == "UBF0") %>% 
+          pivot_wider(values_from = Value, names_from = Percentile) %>% 
+          data.frame()
+        #100% reduction urban 
+        #upper bound (p90)
+        upper.bound0 <- urban0$p90
+        #lower bound (p10)
+        lower.bound0 <- urban0$p10
+        
+        #if min of 100% reduction in stormdrain Q is lower than ylim of original WRP curve, find new ylim min and set for stormdrain plots
+        ymin <- min(lower.bound0)
+        if(ymin < ymin.wrp*0.7){
+          #100% reduction plot with smooth curve, new ylim min
+          urban0.p <- p2.life.stage +
+            geom_ribbon(data = urban0, aes(ymin=lower.bound0, ymax=upper.bound0), alpha=0.2, fill = "red") +
+            geom_line(data = urban0, mapping = aes(x=seasonal.wrp.Q, y = p50),color="#d73027", linetype="twodash", lwd=1) +
+            ylim(c(ymin, ymax.wrp))
+        }else{
+          #100% reduction plot with smooth curve
+          urban0.p <- p2.life.stage +
+            geom_ribbon(data = urban0, aes(ymin=lower.bound0, ymax=upper.bound0), alpha=0.2, fill = "red") +
+            geom_line(data = urban0, mapping = aes(x=seasonal.wrp.Q, y = p50),color="#d73027", linetype="twodash", lwd=1)
+        }
+        
+        
+        #save
+        #file.name2 <- paste0(out.dir.bmp, "smoothcurve_", unique.nodes[i], "_", unique.lifestage.hyd[n], "_",seasons.to.plot[j],"_WRP_Sensitivity_Curve_0Urbanflow.jpg")
+        #ggsave(urban0.p, filename=file.name2, dpi=300, height=5, width=5)
+        
+        #50% reduction plot with smooth curve
+        urban50.p <- urban0.p +
+          geom_ribbon(data = urban50, aes(ymin=lower.bound50, ymax=upper.bound50), alpha=0.5, fill = "#fee090") +
+          geom_line(data = urban50, mapping = aes(x=seasonal.wrp.Q, y = p50),color="#fc8d59", linetype="twodash", lwd=1) 
+        
+        #save
+        file.name2 <- paste0(out.dir.bmp, "stormdrainreduction50100_", unique.nodes[i], "_",seasons.to.plot[j], "_", unique.lifestage.hyd[n],  ".jpg")
+        ggsave(urban50.p, filename=file.name2, dpi=300, height=5, width=5)
+        
+        #summary of scenarios - % reduction in metric from baseline for p50
+        #p50 fit and find values 
+        fit.p50 <- lm(p50 ~ seasonal.wrp.Q, data = ffm.sub.metric.j)
+        #predict metric for a given WRP discharge
+        #data.frame of predictions
+        seasonal.wrp.Q <- c(baseline.metric/2, 0)
+        scenario <- c("50% reduction WRP", "0 cfs WRP")
+        test <- data.frame(cbind(as.numeric(seasonal.wrp.Q), scenario))
+        wrp.50pct.100pct <- predict(fit.p50, newdata = test)
+        baseline.50 <- max(ffm.sub.metric.j$p50)
+        #find %change from baseline
+        pct.change <- (baseline.50-wrp.50pct.100pct)/baseline.50 *100
+        cfs.change <- baseline.50 - wrp.50pct.100pct
+        #find change in no urban baseflow scenario
+        #p50 fit and find values
+        fit.p50.nourban <- lm(p50 ~ seasonal.wrp.Q, data = ffm.sub.metric.j.urban)
+        urban.predict <- predict(fit.p50.nourban, newdata = test)
+        #find %change from baseline
+        pct.change.urban <- (baseline.50-urban.predict)/baseline.50 *100
+        cfs.change.urban <- baseline.50 - urban.predict
+        baselinewrp.nourban <- max(ffm.sub.metric.j.urban$p50)
+        pct.change.baselinewrp.nourban <- (baseline.50-baselinewrp.nourban)/baseline.50 *100
+        ###
+        
+        #change from baseline to 0 WRP
+        dry.change <- (min(ffm.sub.metric.j$p10)-max(ffm.sub.metric.j$p10))/max(ffm.sub.metric.j$p10)*100
+        med.change <- (min(ffm.sub.metric.j$p50)-max(ffm.sub.metric.j$p50))/max(ffm.sub.metric.j$p50)*100
+        wet.change <- (min(ffm.sub.metric.j$p90)-max(ffm.sub.metric.j$p90))/max(ffm.sub.metric.j$p90)*100
         
       }
     }
     
-    # ###
-    # ####Create smooth sensitivity curve with urban baseflow removal scenarios only
-    # #Subset 50% reduction urban and pivot wider
-    # urban50 <- data.plot.urban.merge2.urbnonly %>% 
-    #   filter(UrbanBaseflow_pctQ == "UBF50")  %>% 
-    #   pivot_wider(values_from = Value, names_from = Percentile) %>% 
-    #   data.frame()
-    # #50% reduction urban upper and lower bounds based on p90 and p10
-    # upper.bound50 <- urban50$p90
-    # #predict values 
-    # lower.bound50 <- urban50$p10
-    # 
-    # #Subset 100% reduction urban and pivot wider
-    # urban0 <- data.plot.urban.merge2.urbnonly %>% 
-    #   filter(UrbanBaseflow_pctQ == "UBF0") %>% 
-    #   pivot_wider(values_from = Value, names_from = Percentile) %>% 
-    #   data.frame()
-    # #100% reduction urban 
-    # #upper bound (p90)
-    # upper.bound0 <- urban0$p90
-    # #lower bound (p10)
-    # lower.bound0 <- urban0$p10
-    # 
-    # 
-    # #50% reduction plot with smooth curve
-    # urban0.p <- p2 +
-    #   geom_ribbon(data = urban0, aes(ymin=lower.bound0, ymax=upper.bound0), alpha=0.2, fill = "red") +
-    #   geom_line(data = urban0, mapping = aes(x=seasonal.wrp.Q, y = p50),color="#d73027", linetype="twodash", lwd=1) 
-    # 
-    # #save
-    # file.name2 <- paste0(out.dir.bmp, "smoothcurve_", unique.nodes[i], "_", metric.info$metric, "_WRP_Sensitivity_Curve_0Urbanflow.jpg")
-    # ggsave(urban0.p, filename=file.name2, dpi=300, height=5, width=5)
-    # 
-    # 
-    # #100% reduction plot with smooth curve
-    # urban50.p <- urban0.p +
-    #   geom_ribbon(data = urban50, aes(ymin=lower.bound50, ymax=upper.bound50), alpha=0.5, fill = "#fee090") +
-    #   geom_line(data = urban50, mapping = aes(x=seasonal.wrp.Q, y = p50),color="#fc8d59", linetype="twodash", lwd=1) 
-    # 
-    # #save
-    # file.name2 <- paste0(out.dir.bmp, "smoothcurve_", unique.nodes[i], "_", metric.info$metric, "_WRP_Sensitivity_Curve_50Urbanflow.jpg")
-    # ggsave(urban50.p, filename=file.name2, dpi=300, height=5, width=5)
-    # 
-    # 
-    # #summary of scenarios - % reduction in metric from baseline for p50
-    # #p50 fit and find values 
-    # fit.p50 <- lm(p50 ~ seasonal.wrp.Q, data = ffm.sub.metric.j)
-    # #predict metric for a given WRP discharge
-    # #data.frame of predictions
-    # seasonal.wrp.Q <- c(baseline.metric/2, 0)
-    # scenario <- c("50% reduction WRP", "0 cfs WRP")
-    # test <- data.frame(cbind(as.numeric(seasonal.wrp.Q), scenario))
-    # wrp.50pct.100pct <- predict(fit.p50, newdata = test)
-    # baseline.50 <- max(ffm.sub.metric.j$p50)
-    # #find %change from baseline
-    # pct.change <- (baseline.50-wrp.50pct.100pct)/baseline.50 *100
-    # cfs.change <- baseline.50 - wrp.50pct.100pct
-    # #find change in no urban baseflow scenario
-    # #p50 fit and find values
-    # fit.p50.nourban <- lm(p50 ~ seasonal.wrp.Q, data = ffm.sub.metric.j.urban)
-    # urban.predict <- predict(fit.p50.nourban, newdata = test)
-    # #find %change from baseline
-    # pct.change.urban <- (baseline.50-urban.predict)/baseline.50 *100
-    # cfs.change.urban <- baseline.50 - urban.predict
-    # baselinewrp.nourban <- max(ffm.sub.metric.j.urban$p50)
-    # pct.change.baselinewrp.nourban <- (baseline.50-baselinewrp.nourban)/baseline.50 *100
-    # ###
-    # 
-    # #change from baseline to 0 WRP
-    # dry.change <- (min(ffm.sub.metric.j$p10)-max(ffm.sub.metric.j$p10))/max(ffm.sub.metric.j$p10)*100
-    # med.change <- (min(ffm.sub.metric.j$p50)-max(ffm.sub.metric.j$p50))/max(ffm.sub.metric.j$p50)*100
-    # wet.change <- (min(ffm.sub.metric.j$p90)-max(ffm.sub.metric.j$p90))/max(ffm.sub.metric.j$p90)*100
-    
-
   }
 }
 

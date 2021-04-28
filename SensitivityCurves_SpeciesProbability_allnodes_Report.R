@@ -270,8 +270,7 @@ for(i in 1:length(unique.nodes)){
     data.plot <- pivot_longer(wrp.sub.metric.j, cols = c("p90", "p50", "p10"), names_to="Percentile", values_to="Value")
     data.plot$Percentile <- factor(data.plot$Percentile, levels = Percentile)
     
-    #UPDATE HERE LATER
-    #SUSTAIN pivot data
+    #SUSTAIN pivot data for urban removal scenarios
     #pivot longer .urban to format correctly
     data.plot.urban <- pivot_longer(wrp.sub.metric.j.urban, cols = c("p90", "p50", "p10"), names_to="Percentile", values_to="Value")
     data.plot.urban$Percentile <- factor(data.plot.urban$Percentile, levels = Percentile)
@@ -435,6 +434,7 @@ for(i in 1:length(unique.nodes)){
         
       
         #####################################################
+        #JOSE: do not need to plot the urban baseflow removal scenarios, only WRP plot
         ####Create smooth sensitivity curve with urban baseflow removal scenarios only
         #subset stormdrain scenarios to lifestage hydraulics
         #wrp.sub.metric.j.urban.life.stage <- wrp.sub.metric.j.urban[wrp.sub.metric.j.urban$species.lifestage.hyd == unique.lifestage.hyd[n],]
@@ -529,6 +529,23 @@ for(i in 1:length(unique.nodes)){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#DONT" NEED
 ##################
 ###Sensitivity Curves for stormwater capture, urban drool removal, and combined - loop through all metrics and evaluate peak flows
 

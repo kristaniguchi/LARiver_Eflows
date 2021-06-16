@@ -166,7 +166,12 @@ for(l in 1:length(unique.sites)){
       geom_boxplot(stat="identity")  + 
       #labs(title = metric.info$title_component, subtitle=metric.info$title_ffm) + 
       ylab(paste0(metric.info$title_component2, metric.info$title_ffm2)) + xlab("") +
-      theme(legend.position="bottom", legend.title = element_blank())
+      scale_fill_manual(name = "", values = c("grey36", "grey80", "white")) +
+      theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(), axis.line = element_line(colour = "black")) +
+      theme_bw() + 
+      theme(legend.position="bottom", legend.title = element_blank()) 
+
     
     #add in line for recreational use
     #kayaking flow limit for GLEN
@@ -185,7 +190,7 @@ for(l in 1:length(unique.sites)){
     print(boxplots.rec)
     
     #filename
-    file.name <- paste0("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/manuscripts/sensitivitycurves_FFMs/figures/", metric.info$metric, "_boxplot_WRP_Ref_recreationlimits_GLEN.jpg")
+    file.name <- paste0("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/manuscripts/sensitivitycurves_FFMs/02_figures/fig7_", metric.info$metric, "_boxplot_WRP_Ref_recreationlimits_GLEN.jpg")
     ggsave(boxplots.rec, filename=file.name, dpi=300, height=5, width=8)
     
   }

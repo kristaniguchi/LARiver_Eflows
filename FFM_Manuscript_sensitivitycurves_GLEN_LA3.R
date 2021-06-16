@@ -67,8 +67,14 @@ for(i in 1:length(ffm.all2$p10)){
 
 
 #read in WRP scenario labels with seasonal WRP  and various values for each reporting node based on which WRP discharges to it
-iterations <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/manuscripts/sensitivitycurves_FFMs/summary_seasonalWRP_node.csv") %>% 
+iterations <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/manuscripts/sensitivitycurves_FFMs/01_data/summary_seasonalWRP_node.csv") %>% 
   rename(dry_season=dry, wet_season=wet, spring=spr)
+#add in baseline iterations
+baseline.iterations <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/manuscripts/sensitivitycurves_FFMs/01_data/summary_seasonalWRP_node_baselineonly.csv") %>% 
+  rename(dry_season=dry, wet_season=wet, spring=spr)
+#combine scenario wrp with baselin
+iterations <- add_row(iterations, baseline.iterations)
+
 #change all the units of cfs to cms in ffm.labels df
 names(iterations) <-gsub("cfs", "cms", names(iterations))
 #convert all WRP Q to cms
@@ -81,7 +87,7 @@ for(i in 2:4){
 
 
 #output directory where sensitivity curves to be saved
-out.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/manuscripts/sensitivitycurves_FFMs/figures/"
+out.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/manuscripts/sensitivitycurves_FFMs/02_figures/"
 dir.create(out.dir)
 
 #Reporting node description file
@@ -245,7 +251,6 @@ for(i in 1:length(unique.nodes)){
       #find max from wet season baseflow to use same y scale on both plots
       y.max.WRP <- max(ffm.sub.metric.j$p90)
       
-      
     }
     
 
@@ -302,7 +307,10 @@ for(i in 1:length(unique.nodes)){
         geom_hline(yintercept=typha.low.limit, color = "blue", lty="dashed") +
         annotate(geom = "text", x = 0.4, y = typha.low.limit+.1, label = "Typha Lower Limit") +
         geom_hline(yintercept=willow.low.limit, color = "red", lty="dashed") +
-        annotate(geom = "text", x = 1, y = willow.low.limit+.1, label = "Willow Lower Limit")
+        annotate(geom = "text", x = 1, y = willow.low.limit+.1, label = "Willow Lower Limit") +
+        #baseline WRP
+        geom_vline(xintercept=baseline.metric, lty="dashed") +
+        annotate(geom = "text", x = baseline.metric-0.05, y = 1.25, label = "Current WRP", angle = 90)
         
       print(p.flowrange2)
       
@@ -333,7 +341,10 @@ for(i in 1:length(unique.nodes)){
       cladophora.low.limit <- 348*0.028316846592
       p.flowrange2 <- p2 + 
         geom_hline(yintercept=steelhead.low.limit, color = "blue", lty="dashed") +
-        annotate(geom = "text", x = 1.4, y = steelhead.low.limit+.1, label = "Steelhead Migration Lower Limit") 
+        annotate(geom = "text", x = 1.4, y = steelhead.low.limit+.1, label = "Steelhead Migration Lower Limit") +
+        #baseline WRP
+        geom_vline(xintercept=baseline.metric, lty="dashed") +
+        annotate(geom = "text", x = baseline.metric-0.05, y = 2.5, label = "Current WRP", angle = 90)
         #geom_hline(yintercept=cladophora.low.limit, color = "red", lty="dashed") +
         #annotate(geom = "text", x = 1, y = cladophora.low.limit+.1, label = "Cladophora Lower Limit")
       
@@ -343,9 +354,6 @@ for(i in 1:length(unique.nodes)){
       file.name <- paste0(out.dir, unique.nodes[i], "_", metric.info$metric, "_WRP_Sensitivity_Curve_lowerlimits.jpg")
       ggsave(p.flowrange2, filename=file.name, dpi=300, height=4, width=5)
     }
-    
-    
-
   }
 }
 

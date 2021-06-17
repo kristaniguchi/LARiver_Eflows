@@ -357,6 +357,11 @@ for(i in 1:length(unique.nodes)){
   }
 }
 
-
-
-
+#get water year day
+library(EflowStats)
+x <- seq(from=as.Date("2010-10-01"),to=as.Date("2011-09-30"),by="1 days")
+WYD <- as.numeric(get_waterYearDay(x))
+wyd.out <- data.frame(cbind(as.character(x), as.character(WYD)))
+names(wyd.out) <- c("x", "WYD")
+#find
+wyd.out$x[wyd.out$WYD == 101]

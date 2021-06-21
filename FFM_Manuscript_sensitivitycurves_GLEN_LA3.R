@@ -305,7 +305,7 @@ for(i in 1:length(unique.nodes)){
       willow.low.limit <- 23*0.028316846592
       p.flowrange2 <- p2 + 
         geom_hline(yintercept=typha.low.limit, color = "blue", lty="dashed") +
-        annotate(geom = "text", x = 0.4, y = typha.low.limit+.1, label = "Typha Lower Limit") +
+        annotate(geom = "text", x = 0.4, y = typha.low.limit+.1, label = "Cattail Lower Limit") +
         geom_hline(yintercept=willow.low.limit, color = "red", lty="dashed") +
         annotate(geom = "text", x = 1, y = willow.low.limit+.1, label = "Willow Lower Limit") +
         #baseline WRP

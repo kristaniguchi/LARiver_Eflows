@@ -19,43 +19,47 @@ mytoken <- "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmaXJzdE5hbWUiOiJLcmlzIiwibGF
 set_token(mytoken) 
 
 #directory where stormwater scenario outputs are saved
-#data.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterScenarios/Results/"
-data.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/Results_WRP_UBF/"
+#data.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/Results_WRP_UBF/"
+data.dir <- "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/Results_WRP_UBF/"
 
 
 #scenarios to loop through (12, exclude baseline)
 path.all <- list.files(data.dir, full.names = TRUE)
 scenario.names <- list.files(data.dir)
+path.scenarios <- path.all
 
 #IF EXCLUDING BASELINE RUNS, find index of baseline scenarios, exclude
-ind.baseline <- grep("Baseline", path.all)
-path.scenarios <- path.all[-ind.baseline]
-scenario.names <- list.files(data.dir)[-ind.baseline]
+#ind.baseline <- grep("Baseline", path.all)
+#path.scenarios <- path.all[-ind.baseline]
+#scenario.names <- list.files(data.dir)[-ind.baseline]
 #to run baseline only runs
 #ind.baseline <- grep("Baseline", path.all)
 #path.scenarios <- path.all[ind.baseline]
 #scenario.names <- list.files(data.dir)[ind.baseline]
 
 #temp: only run AggressiveInfiltration_WRP100_UBF100 and AggressiveInfiltration_WRP100_UBF0 
-ind.run1 <- grep("AggressiveInfiltration_WRP100_UBF100", path.all)
-ind.run2 <- grep("AggressiveInfiltration_WRP100_UBF0", path.all)
-path.scenarios <- path.all[c(ind.run2,ind.run1)]
-scenario.names <- scenario.names[c(ind.run2,ind.run1)]
+#ind.run1 <- grep("AggressiveInfiltration_WRP100_UBF100", path.all)
+#ind.run2 <- grep("AggressiveInfiltration_WRP100_UBF0", path.all)
+#path.scenarios <- path.all[c(ind.run2,ind.run1)]
+#scenario.names <- scenario.names[c(ind.run2,ind.run1)]
 
 
 
 #lookup table that relates SWMM node with SUSTAIN junctions
-junctions <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/Lookup_SWMM_ReportingNode_SUSTAIN_Junctions.csv") %>% 
-  rename(ReportingNode = Reporting.Node)
+#junctions <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/Lookup_SWMM_ReportingNode_SUSTAIN_Junctions.csv") %>% 
+junctions <- read.csv("C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/Lookup_SWMM_ReportingNode_SUSTAIN_Junctions.csv") %>% 
+    rename(ReportingNode = Reporting.Node)
 #unique junctions to loop through
 unique.junctions <- unique(junctions$Junction.Number)
 
 #COMID for each reporting node
-comid.node <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/reportingnodes_COMID.csv")%>% 
+#comid.node <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/reportingnodes_COMID.csv")%>% 
+comid.node <- read.csv("C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/reportingnodes_COMID.csv")%>% 
   rename(ReportingNode = Name)
 
 #Reporting node description file
-reporting.node.names <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/200827_draft-reporting-nodes-v4.csv")
+#reporting.node.names <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/200827_draft-reporting-nodes-v4.csv")
+reporting.node.names <- read.csv("C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/200827_draft-reporting-nodes-v4.csv")
 reporting.node.names <- rename(reporting.node.names, ReportingNode = SWMM.Node )
 
 #merge junctions lookup, COMID, reporting node name files
@@ -74,8 +78,15 @@ ffm.labels$metric <- ffm.labels$flow_metric
 #create empty percentiles df with all summary values
 percentiles.all <- data.frame(matrix(NA,1,11))
 names(percentiles.all) <- c("p10","p25","p50","p75","p90","metric","comid","result_type", "source2","ReportingNode", "Scenario")
-#i = 7 # test GLEN
-#i =  2 #F319 wardlow
+
+#create empty df with all annual results from each scenario
+results.all <- data.frame(matrix(NA, 1, 30))
+names(results.all) <- c("Year","DS_Dur_WS","DS_Tim","DS_Mag_50","DS_Mag_90","FA_Dur","FA_Mag","FA_Tim","SP_ROC","SP_Dur","SP_Mag","SP_Tim","Wet_BFL_Dur",
+                        "Wet_BFL_Mag_10","Wet_BFL_Mag_50","Wet_Tim","Peak_Tim_10","Peak_Tim_2","Peak_Tim_5","Peak_Dur_10","Peak_Dur_2","Peak_Dur_5","Peak_10","Peak_2",       
+                        "Peak_5","Peak_Fre_10","Peak_Fre_2","Peak_Fre_5","ReportingNode","Scenario")
+
+
+
 
 #empty vector of error nodes if errors will save here
 ffc.errors <- NA
@@ -175,6 +186,17 @@ for(i in 1:length(scenario.names)){
       #save as backup
       write.csv(percentiles.all, paste0(data.dir,scenario.names[i],"/daily/FFMs/percentiles.all.csv"))
       
+      #pull out the annual results
+      #annual results
+      scenario.results.ffm.all <- ffc$ffc_results
+      scenario.results.ffm.all$ReportingNode <- rep(node, length(scenario.results.ffm.all$Year))
+      scenario.results.ffm.all$Scenario <- rep(scenario.name, length(scenario.results.ffm.all$Year))
+      
+      #save annual results into results.all df
+      results.all <- data.frame(rbind(results.all, scenario.results.ffm.all))
+      #Write annual results all for backup
+      write.csv(results.all, file = paste0(data.dir,scenario.names[i], "/daily/FFMs/FFM_annual_results_allnodes_scenarios.csv"))
+      
     }, error = function(e) {
       print(paste0(i, " FFC Error"))
       ffc.errors <- c(ffc.errors, node)
@@ -185,13 +207,25 @@ for(i in 1:length(scenario.names)){
 }
 
 
-#remove first NA row
+#remove first NA row percentiles.all
 percentiles.all2 <- percentiles.all[2:length(percentiles.all$p10),]
 #save reporting node column as class
 percentiles.all2$ReportingNode <- as.character(percentiles.all2$ReportingNode)
-
 #write percentiles.all
-write.csv(percentiles.all2, file = "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_percentiles_SUSTAIN_Junctions_StormwaterScenariosUrbn.csv")
+#write.csv(percentiles.all2, file = "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_percentiles_SUSTAIN_Junctions_StormwaterScenariosUrbn.csv", row.names=FALSE)
+write.csv(percentiles.all2, file = "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_percentiles_SUSTAIN_Junctions_StormwaterScenariosUrbn.csv", row.names=FALSE)
+
+#remove first NA row results.all
+results.all2 <- results.all[2:length(results.all$Year),]
+#save reporting node column as class
+results.all2$ReportingNode <- as.character(results.all2$ReportingNode)
+#write results.all2
+#write.csv(results.all2, file = "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_results_SUSTAIN_Junctions_StormwaterScenariosUrbn.csv", row.names=FALSE)
+write.csv(results.all2, file = "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_results_SUSTAIN_Junctions_StormwaterScenariosUrbn.csv", row.names=FALSE)
+
+
+
+
 
 #Write baseline only runs!
 #write.csv(percentiles.all2, file = "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_percentiles_SUSTAIN_BaselineScenarios_urbn_only.csv")

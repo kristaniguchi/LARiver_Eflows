@@ -1,20 +1,56 @@
-#Synthesis boxplots for developing flow recommendations - GLEN example
+#Synthesis boxplots for developing flow recommendations - GLEN example node
+  #boxplot examples showing flow ranges for species life stage, current, and rec use
+  #hydrograph examples with ribbons showing optimal flow range
 
 #load library
 library("ggplot2")
 
-#read in data
-data <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/Flow recommendations report/synthesis_boxplot_example_GLEN.csv",stringsAsFactors = FALSE, encoding = "UTF-8")
+#read in data for boxplots with flow ranges 
+#GLEN data - working on an overall table with all nodes to loop through (same format)
+#data <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/Flow recommendations report/synthesis_boxplot_example_GLEN.csv",stringsAsFactors = FALSE, encoding = "UTF-8")
+data.all <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/Flow recommendations report/FlowRanges_Species_RecUses_Allnodes_04132021.csv",stringsAsFactors = FALSE, encoding = "UTF-8")
+#subset to GLEN
+data <- data.all %>% 
+  filter(Node == "GLEN")
+#find rows for willow, typha, current, Rec.
+ind.willow <- grep("Willow", data$Species)
+ind.Typha <- grep("Typha", data$Species)
+ind.Current <- grep("Current", data$Species)
+ind.Rec. <- grep("Rec.", data$Species)
+#subset GLEN to selected uses
+data <- data[c(ind.willow, ind.Typha, ind.Current, ind.Rec.),]
+#exclude high prob
+ind.high <- grep("High", data$Probability_Threshold)
+data <- data[-ind.high,]
+#exclude DS mag 90 and wet mag 50
+ind.dsmag90 <- grep("DS_Mag_90", data$metric)
+ind.wet50 <- grep("Wet_BFL_Mag_50", data$metric)
+data <- data[-c(ind.dsmag90,ind.wet50),]
+
+
+#recreational use range: flow associated with .9-1.5 ft of depth in river at GLEn
+baseline.hyd <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Baseline_hydraulic-results-v4-201130/results-hydraulics_postprocessed/GLEN_predictions.csv", )
+baseline.hyd <- na.omit(baseline.hyd)
+#find recreational use range
+depth.approx <- approx(baseline.hyd$Max.Chl.Depth..ft., baseline.hyd$Flow,  xout=c(0.9, 1.5), ties=mean)
+
 
 #create boxplot showing different flow ranges
 #unique species
-data$Species <- factor(data$Species, levels = c("Willow - Growth", "Willow - Adult", "Typha - Growth", "Typha - Adult", "Cladaphora - Adult", "Current Flow"))
+data$Species <- factor(data$Species, levels = c("Willow - Growth", "Willow - Adult", "Typha - Growth", "Typha - Adult", "Current Flow", "Rec. Use - Kayak", "Rec. Use - Fishing"))
 data$Species_Label <- gsub(" ", "\n", data$Species_Label)
-data$Species_Label <- factor(data$Species_Label, levels = c("Willow\nGrowth", "Willow\nAdult", "Typha\nGrowth", "Typha\nAdult", "Cladaphora\nAdult", "Current\nFlow"))
+data$Species_Label <- factor(data$Species_Label, levels = c("Willow\nGrowth", "Willow\nAdult", "Typha\nGrowth", "Typha\nAdult", "Current\nFlow", "Rec.\nUse\nKayak", "Rec.\nUse\nFishing"))
+#update facet label 
+data$Seasonal.Component <- gsub("Summer", "Dry-Season", data$Seasonal.Component)
+data$Seasonal.Component <- gsub("Winter", "Wet-Season", data$Seasonal.Component)
+#save upper and lower limits as numeric
+data$Lower_Limit <- as.numeric(data$Lower_Limit)
+data$Upper_Limit <- as.numeric(data$Upper_Limit)
+
 
 #set colors
 Species <- levels(data$Species)
-Colors <- c("#fc8d59", "#d73027", "#91bfdb", "#4575b4", "#fee090", "white")
+Colors <- c("#fc8d59", "#d73027", "#91bfdb", "#4575b4", "white", "black", "#fee090")
 lookup <- data.frame(cbind(as.character(Species), Colors))
 names(lookup) <- c("Species", "Colors")
 
@@ -30,23 +66,23 @@ P<- ggplot(data, aes(x=Species_Label, ymin = Lower_Limit, lower = Lower_Limit, m
 
 P
 
-ggsave(P, filename="C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/Flow recommendations report/GLEN.boxplot.flowranges.jpg", dpi=300, height=6, width=14)
+ggsave(P, filename="C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/Flow recommendations report/GLEN.boxplot.flowranges2_recuse.jpg", dpi=300, height=6, width=16)
 
 
 
 #######################################################################
 #Create hydrograph plot with flow criteria on top of it
 
-library(ffcAPIClient);library(ggplot2);library(lubridate);library(dplyr);library(dataRetrieval);library(stringr);library(tidyr);library(purrr);library(Cairo)
+library(ggplot2);library(lubridate);library(dplyr);library(dataRetrieval);library(stringr);library(tidyr);library(purrr);library(Cairo)
 detach(package:plyr)
 #remotes::install_github("USGS-R/EflowStats")
 library("EflowStats")
 
 
-#GLEN daily flow
+#GLEN daily flow - will need to loop through daily directory to plot flow data from each of the nodes
 flow.data <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/GLEN_flow_daily.csv")
 
-#find WYT
+#find water year
 data2<-flow.data %>% 
   mutate(date=mdy(date),
          month=month(date), 
@@ -54,7 +90,7 @@ data2<-flow.data %>%
          Water.year=ifelse(month > 9, year+1,year))
 
 #remove NAs and assign WY days
-data.2 <- data.2 %>% 
+data.2 <- data2 %>% 
   na.omit() %>% 
   group_by(Water.year) %>% 
   arrange(date, .by_group= TRUE) %>% # in case the entries are not in order
@@ -62,7 +98,7 @@ data.2 <- data.2 %>%
   ungroup()
   
 
-#add in water year day
+#test: find water year day associated with a date
 #x <- seq(from=as.Date("2010-03-01"),to=as.Date("2010-10-01"),by="1 days")
 WYD_day <- get_waterYearDay("2010-12-01")
 get_waterYearDay("2010-03-31")
@@ -74,22 +110,27 @@ summary <-data2%>%
   group_by(Water.year)%>% 
   summarise(Mean=mean(flow))
 
-#choose wet (2011), dry (2016), moderate (2015) water years as the types, WYT classified from total annual rainfall from PRISM 1950-2019
-#find annual results to pull the peak flow timing and duration for WYT based on wet season baseflow
+#choose wet (2011, 2017), dry (2014), moderate (2015) water years as the types, WYT classified from total annual rainfall from PRISM 1950-2019
+#find annual results to pull the wet season timing and duration for WYT based on wet season baseflow
 ffm <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/GLEN/baseline.results.ffm.all.GLEN.csv")
+#selected years to display hydrographs
 ffm.years <- ffm %>% 
-  filter(Year == 2011 | Year == 2015 | Year == 2016)
+  filter(Year == 2011 | Year == 2017 | Year == 2015 | Year == 2014)
 
 #create subset of flow timeseries for wet dry and moderate
 wet <- data.frame(data.2[data.2$Water.year == 2011,])
 wet$WYT <- "Wet Year (2011)"
+wet2 <- data.frame(data.2[data.2$Water.year == 2017,])
+wet2$WYT <- "Wet Year (2017)"
 moderate <- data.frame(data.2[data.2$Water.year == 2015,])
 moderate$WYT <- "Moderate Year (2015)"
-dry <- data.frame(data.2[data.2$Water.year == 2016,])
-dry$WYT <- "Dry Year (2016)"
-all.wyt.data <- rbind(wet, moderate, dry)
+dry <- data.frame(data.2[data.2$Water.year == 2014,])
+dry$WYT <- "Dry Year (2014)"
+all.wyt.data <- rbind(wet, wet2, moderate, dry)
+#set levels for WYT
+all.wyt.data$WYT <- factor(all.wyt.data$WYT, levels = c("Dry Year (2014)", "Moderate Year (2015)", "Wet Year (2017)", "Wet Year (2011)"))
 
-#subset species limits
+#subset species limits - this example only looking at 3 species
 cladaphora <- data[data$Species == "Cladaphora - Adult",]
 typha.adult <- data[data$Species == "Typha - Adult",]
 typha.growth <- data[data$Species == "Typha - Growth",]
@@ -97,44 +138,12 @@ willow.adult <- data[data$Species == "Willow - Adult",]
 willow.growth <- data[data$Species == "Willow - Growth",]
 
 
-####plot hydrographs with the species flow ranges on top of them
-
-ggplot(data = all.wyt.data, aes(x=Day, y=(flow))) +theme_classic()+
-  
-  #hydrographs with all species life stage lower limits
-  #geom_line(data=dat, aes(x=Day, y=(flow)),color="grey30",alpha=.2,size=.2)+  
-  geom_line(aes(x=Day, y=(flow)),color="black",size=.2) +
-  facet_wrap(~WYT, ncol=1) +
-  #cladaphora adult
-  geom_segment(aes(y=cladaphora$Lower_Limit[1], x = 1, xend = 365, yend = cladaphora$Lower_Limit[1]), color=lookup$Colors[lookup$Species == "Cladaphora - Adult"], size=1) +
-  #willow adult 
-  geom_segment(aes(y=willow.adult$Lower_Limit[1], x = 1, xend = 365, yend=willow.adult$Lower_Limit[1]), color=lookup$Colors[lookup$Species == "Willow - Adult"], size=1) +
-  #willow growth 
-  geom_segment(aes(y=willow.growth$Lower_Limit[1], x = 1, xend = 365, yend=willow.growth$Lower_Limit[1]), color=lookup$Colors[lookup$Species == "Willow - Growth"], size=1) +
-  #Typha adult 
-  geom_segment(aes(y=typha.adult$Lower_Limit[1], x = 1, xend = 365, yend=typha.adult$Lower_Limit[1], ), color=lookup$Colors[lookup$Species == "Typha - Adult"], size=1) +
-  #Typha growth 
-  #geom_segment(aes(y=typha.growth$Lower_Limit[1], x = 183, xend = 365, yend=typha.growth$Lower_Limit[1]), color=lookup$Colors[lookup$Species == "Typha - Growth"], size=1) +
-  
-  #geom_line(aes(x=Day, y=(flow)),color="white",size=.2) +
-  coord_cartesian(ylim=c(0,600)) +
-  scale_color_manual(values=colors1)+  scale_fill_manual(values=colors1)+
-  ylab("Discharge (cfs)") + 
-  theme(axis.title.x=element_blank())+
-  scale_x_continuous(breaks = c(1,30,60,90,120,150,180,210,240,271,302,333,366),
-                     labels = paste0(c("Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May","Jun","Jul","Aug","Sep","Oct")),"Month")+
-  theme(legend.position = "none")
-
-dev.off()
-
-
-
-###ribbons with the optimal/synthesized flow ranges
+###plot hydrograph with ribbons with the optimal/synthesized flow ranges
 
 #hydrograph plots with synthesized recommendations - one color for ranges labeled by species
 #compile ribbon data to make filled ribbon that changes at diff water year days (wet and dry season)
 min <- c(77, 77, 77, 77)
-max <- c(564,564, 165, 165)
+max <- c(355,355, 166, 166)
 end.day <- c(1,183, 184,365)
 Baseflow <- c("Winter", "Winter", "Summer", "Summer")
 ribbon <- data.frame(cbind(end.day, min, max))
@@ -143,7 +152,7 @@ ribbon <- data.frame(cbind(end.day, min, max))
 hydrograph <- ggplot() +theme_classic()+
   #hydrographs with all species life stage lower limits
   #geom_line(data=dat, aes(x=Day, y=(flow)),color="grey30",alpha=.2,size=.2)+  
-  geom_line(data = all.wyt.data, aes(x=Day, y=(flow)),color="black",size=.2) +
+  geom_line(data = all.wyt.data, aes(x=Day, y=(flow)),color="black",lwd=.5) +
   facet_wrap(~WYT, ncol=1) +
   coord_cartesian(ylim=c(0,600)) +
   ylab("Discharge (cfs)") + 
@@ -154,6 +163,11 @@ hydrograph <- ggplot() +theme_classic()+
 
 hydrograph
 
+#save
+file.name <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/Flow recommendations report/GLEN.hydrographs_WYT.jpg"
+#ggsave(hydrograph, filename=file.name, dpi=500, height=6, width=8)
+
+
 #add ribbons to hydrograph
 ribbons <- hydrograph +
   geom_ribbon(data = ribbon, aes(x= end.day, ymin=min,  ymax = max), fill= "blue", alpha=0.2)
@@ -162,7 +176,44 @@ ribbons
 
 dev.off()
 
-#zoom on dry season
+
+#Plot only one year - moderate year 2015
+#subset to Wy2015
+wy2015 <- all.wyt.data[all.wyt.data$Water.year == 2015,]
+
+#hydrograph plot
+hydrograph1 <- ggplot() +theme_classic()+
+  #hydrographs with all species life stage lower limits
+  #geom_line(data=dat, aes(x=Day, y=(flow)),color="grey30",alpha=.2,size=.2)+  
+  geom_line(data = wy2015, aes(x=Day, y=(flow)),color="black",lwd=.5) +
+  #coord_cartesian(ylim=c(0,600)) +
+  ylab("Discharge (cfs)") + 
+  theme(axis.title.x=element_blank())+
+  scale_x_continuous(breaks = c(1,30,60,90,120,150,180,210,240,271,302,333,366),
+                     labels = paste0(c("Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May","Jun","Jul","Aug","Sep","Oct")),"Month")+
+  scale_y_log10() +
+  theme(legend.position = "none")
+
+hydrograph1
+
+#add ribbons to hydrograph
+ribbons2 <- hydrograph1 +
+  geom_ribbon(data = ribbon, aes(x= end.day, ymin=min,  ymax = max), fill= "blue", alpha=0.2)
+#add lower limit line only
+#add ribbons to hydrograph
+ribbons2 <- hydrograph1 +
+  geom_hline(yintercept=min[1], color="red", size=1, lty="dashed") +
+  geom_hline(yintercept=568, color="blue", size=1, lty="dotted")
+#add peak flow limit?
+
+ribbons2
+
+#save
+file.name <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/Flow recommendations report/GLEN.hydrographs_WY2015_flowranges.jpg"
+ggsave(ribbons2, filename=file.name, dpi=500, height=4, width=6)
+
+
+#zoom in on dry season
 summer.zoom <- ggplot() +theme_classic()+
   #hydrographs with all species life stage lower limits
   geom_line(data = all.wyt.data, aes(x=Day, y=(flow)),color="black",size=.2) +
@@ -185,6 +236,38 @@ dev.off()
 
 
 
+
+
+####EXTRA: plot hydrographs with the species lower flow limit - DO NOT USE THIS HYDROGRAPH
+
+ggplot(data = all.wyt.data, aes(x=Day, y=(flow))) +theme_classic()+
+  
+  #hydrographs with all species life stage lower limits
+  #geom_line(data=dat, aes(x=Day, y=(flow)),color="grey30",alpha=.2,size=.2)+  
+  geom_line(aes(x=Day, y=(flow), color = Water.year),color="black",size=.2) +
+  #geom_line(aes(x=Day, y=(flow), color = Water.year),size=.2) +
+  facet_wrap(~WYT, ncol=1) +
+  #cladaphora adult
+  geom_segment(aes(y=cladaphora$Lower_Limit[1], x = 1, xend = 365, yend = cladaphora$Lower_Limit[1]), color=lookup$Colors[lookup$Species == "Cladaphora - Adult"], size=1) +
+  #willow adult 
+  geom_segment(aes(y=willow.adult$Lower_Limit[1], x = 1, xend = 365, yend=willow.adult$Lower_Limit[1]), color=lookup$Colors[lookup$Species == "Willow - Adult"], size=1) +
+  #willow growth 
+  geom_segment(aes(y=willow.growth$Lower_Limit[1], x = 1, xend = 365, yend=willow.growth$Lower_Limit[1]), color=lookup$Colors[lookup$Species == "Willow - Growth"], size=1) +
+  #Typha adult 
+  geom_segment(aes(y=typha.adult$Lower_Limit[1], x = 1, xend = 365, yend=typha.adult$Lower_Limit[1], ), color=lookup$Colors[lookup$Species == "Typha - Adult"], size=1) +
+  #Typha growth 
+  #geom_segment(aes(y=typha.growth$Lower_Limit[1], x = 183, xend = 365, yend=typha.growth$Lower_Limit[1]), color=lookup$Colors[lookup$Species == "Typha - Growth"], size=1) +
+  
+  #geom_line(aes(x=Day, y=(flow)),color="white",size=.2) +
+  coord_cartesian(ylim=c(0,600)) +
+  #scale_color_manual(values=colors1)+  scale_fill_manual(values=colors1)+
+  ylab("Discharge (cfs)") + 
+  theme(axis.title.x=element_blank())+
+  scale_x_continuous(breaks = c(1,30,60,90,120,150,180,210,240,271,302,333,366),
+                     labels = paste0(c("Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May","Jun","Jul","Aug","Sep","Oct")),"Month")+
+  theme(legend.position = "none")
+
+dev.off()
 
 
 

@@ -13,9 +13,17 @@
 #Hydraulics raw output directory
 #scenarios hydraulics:
 #raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/WRP_scenarios/" #WRP scenarios
-raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Stormwater_Scenarios/" #stormwater scenarios
+#raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Stormwater_Scenarios/" #stormwater scenarios
 #baseline hydraulics:
-#raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Baseline_hydraulic-results-v4-201130/"
+raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Baseline_hydraulic-results-v4-201130/"
+
+#tidal directories
+##tidal baseline
+#raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Tidal_LA1LA2/Baseline/" #baseline scenarios
+##tidal stormdrain scenarios
+#raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Tidal_LA1LA2/StormDrain-Dryweather0_WRP/" #stormwater scenarios
+##tidal WRP scenarios
+#raw.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Tidal_LA1LA2/WRP/" #WRP scenarios
 
 
 #list files
@@ -62,8 +70,8 @@ for(i in 1:length(files)){
   #new chunk to account for reformatted output without hydraulic depth, old had hyd depth included in outputs
   #if hydraulic depth column missing (only max depth outputted), need to add in dummy hydraulic depth columns for the channel locations with data
   if(length(depth.col.names == 1)){
-    #find channel positions with output data velocity
-    num.positions <- length(grep("Vel", col.names))
+    #find channel positions with output data shear
+    num.positions <- length(grep("Shear", col.names))
     #if 3 channel positions, create dummy for LOB, MC, ROB
     if(num.positions == 3) {
       #create dummy hyd depth columns to mimic original output format
@@ -131,6 +139,12 @@ for(i in 1:length(files)){
   #find the col indices for vel
   vel.cols <- col.names[grep("Vel", col.names)]
   depth.cols2 <- col.names[grep("Depth", col.names)]
+  
+  #if LA1, remove the vel columns for LOB and ROB (no overbanks at this node but outputs are there with NA)
+  if(nodes[i] == "LA1"){
+    ind.vel.mc <- grep("MC", vel.cols)
+    vel.cols <- vel.cols[ind.vel.mc]
+  }
   #if vel < 0 change the depth to 0, if depth == 0 change all values to 0 in position
   #if more than one vel columns (LOB, MC, ROB), replace, else if only one (MC), only replace MC
   if(length(vel.cols)> 1){

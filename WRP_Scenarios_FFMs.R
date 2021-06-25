@@ -73,7 +73,7 @@ names(results.all) <- c("Year","DS_Dur_WS","DS_Tim","DS_Mag_50","DS_Mag_90","FA_
 
 
 #test out certain nodes
-i = 7 # test GLEN
+#i = 7 # test GLEN
 #i =  2 #F319 wardlow
 
 for(i in 1:length(flow.files)){
@@ -119,7 +119,7 @@ for(i in 1:length(flow.files)){
     #save scenario percentiles into percentiles.all df
     percentiles.all <- data.frame(rbind(percentiles.all, scenario.percentiles.all))
     
-    #pull out the wet, moderate, and dry year annual results
+    #pull out the wannual results
     #annual results
     scenario.results.ffm.all <- ffc$ffc_results
     scenario.results.ffm.all$ReportingNode <- rep(node, length(scenario.results.ffm.all$Year))
@@ -148,12 +148,25 @@ for(i in 1:length(flow.files)){
   
 }
 
-#remove first NA row
+#remove first NA row percentiles all
 percentiles.all2 <- percentiles.all[2:length(percentiles.all$p10),]
 #save reporting node column as class
 percentiles.all2$ReportingNode <- as.character(percentiles.all2$ReportingNode)
 #write percentiles.all
-write.csv(percentiles.all2, file = paste0(output.dir, "/FFM_percentiles_allnodes_scenarios_02172021.csv"))
+#write.csv(percentiles.all2, file = paste0(output.dir, "/FFM_percentiles_allnodes_scenarios_02172021.csv"), row.names=FALSE)
+write.csv(percentiles.all2, file = paste0(output.dir, "/FFM_percentiles_allnodes_scenarios_02172021.csv"), row.names=FALSE)
+
+#remove first NA row results.all
+results.all2 <- results.all[2:length(results.all$Year),]
+#save reporting node column as class
+results.all2$ReportingNode <- as.character(results.all2$ReportingNode)
+#write percentiles.all
+#write.csv(results.all2, file = paste0(output.dir, "/FFM_annual_results_allnodes_scenarios_02172021.csv"), row.names=FALSE)
+write.csv(results.all2, file = paste0(output.dir, "/FFM_annual_results_allnodes_scenarios_02172021.csv"), row.names=FALSE)
+
+
+
+
 
 
 

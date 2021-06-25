@@ -19,22 +19,29 @@ library("tidyverse")
 
 #my token for FFC API Client
 mytoken <- "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmaXJzdE5hbWUiOiJLcmlzIiwibGFzdE5hbWUiOiJUYW5pZ3VjaGkgUXVhbiIsImVtYWlsIjoia3Jpc3RpbmV0cUBzY2N3cnAub3JnIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE1NzM4NjgwODN9.UJhTioLNNJOxvY_PYb_GIbcMRI_qewjkfYx-usC_7ZA"
+#set token
+set_token(mytoken)
 
 #directory with flow output
-wd <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/"
+#wd <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/"
+wd <- "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/"
+
 #list files
 list.files <- list.files(wd, full.names = TRUE)
 hrly.files <- grep("Nodes/hourly", list.files)
 flow.files <- list.files[hrly.files]
 #set output directory
-output.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/"
+#output.dir <- "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/"
+output.dir <- "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/"
 
 
 #COMID for each reporting node
-comid.node <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/reportingnodes_COMID.csv")
+#comid.node <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/reportingnodes_COMID.csv")
+comid.node <- read.csv("C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/reportingnodes_COMID.csv")
 
 #Reporting node description file
-reporting.node.names <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/200827_draft-reporting-nodes-v4.csv")
+#reporting.node.names <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/200827_draft-reporting-nodes-v4.csv")
+reporting.node.names <- read.csv("C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/SpatialData/reporting-nodes_082020/200827_draft-reporting-nodes-v4.csv")
 reporting.node.names <- rename(reporting.node.names, ReportingNode = SWMM.Node )
 
 #Functional flow metric names and labels for plots
@@ -50,16 +57,25 @@ ffm.labels$metric <- ffm.labels$flow_metric
 percentiles.all <- data.frame(matrix(NA,1,10))
 names(percentiles.all) <- c("p10","p25","p50","p75","p90","metric","comid","result_type", "source2","ReportingNode")
 
+#create empty df with all annual results from each scenario
+results.all <- data.frame(matrix(NA, 1, 30))
+names(results.all) <- c("Year","DS_Dur_WS","DS_Tim","DS_Mag_50","DS_Mag_90","FA_Dur","FA_Mag","FA_Tim","SP_ROC","SP_Dur","SP_Mag","SP_Tim","Wet_BFL_Dur",
+                        "Wet_BFL_Mag_10","Wet_BFL_Mag_50","Wet_Tim","Peak_Tim_10","Peak_Tim_2","Peak_Tim_5","Peak_Dur_10","Peak_Dur_2","Peak_Dur_5","Peak_10","Peak_2",       
+                        "Peak_5","Peak_Fre_10","Peak_Fre_2","Peak_Fre_5","ReportingNode","Scenario")
+
+
+
 #test out GLEN
-i=8
+#i=8
 
 for(i in 1:length(flow.files)){
   #read in flow file
   data <- read.csv(flow.files[i])
   #reporting node
   node <- gsub(".csv", "", flow.files[i])
-  node <- gsub("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/hourly_flow_", "", node)
-    
+  #node <- gsub("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/hourly_flow_", "", node)
+  node <- gsub("C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/hourly_flow_", "", node)
+  
   #format date
   #if 11101250, format date differently
   if(node == "11101250"){
@@ -113,7 +129,6 @@ for(i in 1:length(flow.files)){
   #then run
   results$run()
   
-  results <- ffcAPIClient::evaluate_alteration(timeseries_df = data.daily, comid = COMID[1], token = mytoken)
   #reference percentiles
   ref.percentiles <- results$predicted_percentiles
   ref.percentiles$source2 <- rep("Statewide\nReference", length(ref.percentiles$p10))
@@ -136,15 +151,30 @@ for(i in 1:length(flow.files)){
 
   #save percentiles into percentiles.all df
   percentiles.all <- data.frame(rbind(percentiles.all, baseline.percentiles.all))
+  
+  #save annual results into results.all df
+  baseline.results.ffm.all <- results$ffc_results
+  baseline.results.ffm.all$ReportingNode <- rep(node, length(baseline.results.ffm.all$Year))
+  baseline.results.ffm.all$Scenario <- rep(0, length(baseline.results.ffm.all$Year))
+  results.all <- data.frame(rbind(results.all, baseline.results.ffm.all))
+  
 }
 
-#remove first NA row
+#remove first NA row percentiles.all
 percentiles.all2 <- percentiles.all[2:length(percentiles.all$p10),]
 #save reporting node column as class
 percentiles.all2$ReportingNode <- as.character(percentiles.all2$ReportingNode)
 #write percentiles.all
-write.csv(percentiles.all2, file = "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/FFM_percentiles_reportingnodes_all.csv")
+#write.csv(percentiles.all2, file = "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/FFM_percentiles_reportingnodes_all.csv", row.names=FALSE)
+write.csv(percentiles.all2, file = "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/FFM_percentiles_reportingnodes_all_02172021.csv", row.names=FALSE)
 
+#remove first NA row results.all
+results.all2 <- results.all[2:length(results.all$Year),]
+#save reporting node column as class
+results.all2$ReportingNode <- as.character(results.all2$ReportingNode)
+#write results.all2
+#write.csv(results.all2, file = "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/FFM_annual_results_reportingnodes_all_baseline_02172021.csv", row.names=FALSE)
+write.csv(results.all2, file = "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/FFM_annual_results_reportingnodes_all_baseline_02172021.csv", row.names=FALSE)
 
 
 
@@ -162,7 +192,8 @@ percentiles.all.sort <- percentiles.all.join[order(percentiles.all.join$metric, 
 
 #round values
 percentiles.all.sort.rnd <- percentiles.all.sort %>% mutate_if(is.numeric, ~round(., 2))
-write.csv(percentiles.all.sort.rnd, file= "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/FFM_percentiles_reportingnodes_all_formattedround.csv")
+#write.csv(percentiles.all.sort.rnd, file= "C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/FFM_percentiles_reportingnodes_all_formattedround.csv")
+write.csv(percentiles.all.sort.rnd, file= "C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/FFM_percentiles_reportingnodes_all_formattedround.csv")
 
 
 
@@ -233,7 +264,8 @@ for(k in 1:(length(unique.metrics)-1)){
       annotate(geom = "text", x = 2.2, y = 180, label = "Tillman", angle = 90) 
   }
   print(b)
-  file.name <- paste0("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/", metric.info$metric, "_boxplot_reportingnodes.jpg")
+  #file.name <- paste0("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/", metric.info$metric, "_boxplot_reportingnodes.jpg")
+  file.name <- paste0("C:/Users/KristineT.SCCWRP2K/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/", metric.info$metric, "_boxplot_reportingnodes.jpg")
   ggsave(b, filename=file.name, dpi=300, height=5, width=9.5)
   
   

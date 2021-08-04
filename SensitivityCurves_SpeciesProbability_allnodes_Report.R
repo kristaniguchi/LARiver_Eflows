@@ -71,7 +71,7 @@ prob.all.WRP$Scenario <- as.numeric(prob.all.WRP$Scenario)
 
 
 #read in WRP scenario labels with seasonal WRP  and various values for each reporting node based on which WRP discharges to it
-iterations <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/manuscripts/sensitivitycurves_FFMs/summary_seasonalWRP_node.csv") %>% 
+iterations <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/manuscripts/sensitivitycurves_FFMs/01_data/summary_seasonalWRP_node.csv") %>% 
   rename(dry_season=dry, wet_season=wet, spring=spr)
 
 
@@ -315,8 +315,8 @@ for(i in 1:length(unique.nodes)){
       #x axis label for seasonal wrp
       x.axis <- "Average Annual Dry-Season WRP Discharge (cfs)"
       baseline.metric <- baselines$dry_season
-      subtitle.lab <- "Dry-Season Probability of Ocurrence"
-      y.axis <- "Average Annual Dry-Season Probability of Ocurrence"
+      subtitle.lab <- "Dry-Season Probability of Occurrence"
+      y.axis <- "Average Annual Dry-Season Probability of Occurrence"
     }else{
       #rename wet season WRP to generic x name 
       #wrp data
@@ -332,8 +332,8 @@ for(i in 1:length(unique.nodes)){
       #x axis label for seasonal wrp
       x.axis <- "Average Annual Wet-Season WRP Discharge (cfs)"
       baseline.metric <- baselines$wet_season
-      subtitle.lab <- "Wet-Season Probability of Ocurrence"
-      y.axis <- "Average Annual Wet-Season Probability of Ocurrence"
+      subtitle.lab <- "Wet-Season Probability of Occurrence"
+      y.axis <- "Average Annual Wet-Season Probability of Occurrence"
       
     }
     

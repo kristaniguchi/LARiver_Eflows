@@ -490,6 +490,9 @@ for(i in 1:length(unique.nodes)){
         #save
         file.name2 <- paste0(out.dir.bmp, "stormdrainreduction50100_", unique.nodes[i], "_",seasons.to.plot[j], "_", unique.lifestage.hyd[n],  ".jpg")
         ggsave(urban50.p, filename=file.name2, dpi=300, height=5, width=5)
+        #save as .svg vector for Scott
+        #ggsave("plot.svg", plot = last_plot(), dpi = 300, width = 5, height = 5)
+        
         
         #summary of scenarios - % reduction in metric from baseline for p50
         #p50 fit and find values 

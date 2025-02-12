@@ -18,11 +18,14 @@ library("tidyverse")
 
 #Read in FFM percentiles from scenarios WRP - all nodes
 #ffm.all <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Scenarios/results_FFMs/FFM_percentiles_allnodes_scenarios_02172021.csv")
-ffm.all <- read.csv("C:/Users/KristineT/Documents/Git/LARiver_Eflows/FFM_percentiles_allnodes_scenarios_02172021.csv")
+#ffm.all <- read.csv("C:/Users/kristinet/Documents/Git/LARiver_Eflows/FFM_percentiles_allnodes_scenarios_02172021.csv")
+ffm.all <- read.csv("C:/Users/kristinet/OneDrive - SCCWRP/Documents/Git/LARiver_Eflows/FFM_percentiles_allnodes_scenarios_02172021.csv")
+
 
 #add in baseline FFM percentiles and combine with ffm.all - saved in directory - all nodes
 #baseline.ffm <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/FlowData_from_Jordy/Results-Reporting-Nodes/daily/FFM/FFM_percentiles_reportingnodes_all_02172021.csv")
-baseline.ffm <- read.csv("C:/Users/KristineT/Documents/Git/LARiver_Eflows/FFM_percentiles_reportingnodes_all_02172021.csv")
+#baseline.ffm <- read.csv("C:/Users/KristineT/Documents/Git/LARiver_Eflows/FFM_percentiles_reportingnodes_all_02172021.csv")
+baseline.ffm <- read.csv("C:/Users/kristinet/OneDrive - SCCWRP/Documents/Git/LARiver_Eflows/FFM_percentiles_reportingnodes_all_02172021.csv")
 
 #save baseline scenario as 0 - will add to ffm.all
 baseline.ffm$Scenario <- 0
@@ -40,14 +43,15 @@ write.csv(ffm.all.wet.dry, file = "C:/Users/KristineT/SCCWRP/LA River Eflows Stu
 
 
 #read in WRP scenario labels with seasonal WRP  and various values for each reporting node based on which WRP discharges to it
-iterations <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/manuscripts/sensitivitycurves_FFMs/summary_seasonalWRP_node.csv") %>% 
+iterations <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Reports/manuscripts/sensitivitycurves_FFMs/01_data/summary_seasonalWRP_node.csv") %>% 
   rename(dry_season=dry, wet_season=wet, spring=spr)
 
 
 
 #read in FFM percentiles from SUSTAIN stormwater scenarios and stormdrain reduction scenarios [in same dataframe], includes baseline
 #ffm.bmp.urbn <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_StormwaterUrbanDroolScenarios_02022021/FFM_percentiles_SUSTAIN_Junctions_StormwaterScenariosUrbn.csv")
-ffm.bmp.urbn <- read.csv("C:/Users/KristineT/Documents/Git/LARiver_Eflows/FFM_percentiles_SUSTAIN_Junctions_StormwaterScenariosUrbn.csv")
+#ffm.bmp.urbn <- read.csv("C:/Users/KristineT/Documents/Git/LARiver_Eflows/FFM_percentiles_SUSTAIN_Junctions_StormwaterScenariosUrbn.csv")
+ffm.bmp.urbn <- read.csv("C:/Users/kristinet/OneDrive - SCCWRP/Documents/Git/LARiver_Eflows/FFM_percentiles_SUSTAIN_Junctions_StormwaterScenariosUrbn.csv")
 
 #SUSTAIN scenario labels
 sustain.scenarios <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Study - General/Data/RawData/Results_Hydraulics/Sustain_ScenarioNumbers.csv")
@@ -65,7 +69,7 @@ reporting.node.names <- read.csv("C:/Users/KristineT/SCCWRP/LA River Eflows Stud
 reporting.node.names <- rename(reporting.node.names, ReportingNode = SWMM.Node )
 
 #Functional flow metric names and labels for plots
-filename <- ("L:/CA  E-flows framework_ES/Misc/Functional Flows metrics/functional_flow_metric_modeling/all_metric_def_list_FFMs_v2.csv")
+filename <- ("C:/Users/kristinet/SCCWRP/LA River Eflows Study - General/Reports/manuscripts/sensitivitycurves_FFMs/01_data/all_metric_def_list_FFMs_v2.csv")
 ffm.labels <- read.csv(filename)
 ffm.labels$metric <- ffm.labels$flow_metric
 ffm.labels$metric <- ffm.labels$flow_metric
